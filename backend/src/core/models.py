@@ -18,6 +18,7 @@ from sqlalchemy import (
     String,
     Text,
     JSON,
+    func,
 )
 from sqlalchemy.orm import relationship
 
@@ -76,26 +77,25 @@ class Session(Base):
 class Transaction(Base):
     __tablename__ = "transactions"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    transaction_id = Column(String(50), unique=True, nullable=False, index=True)
-    upi_id = Column(String(100), nullable=False)
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    transaction_id = Column(String(100), unique=True, index=True)
+    
+    # New Real Dataset Fields
+    type = Column(String(50), nullable=False)
     amount = Column(Float, nullable=False)
-    merchant_category = Column(String(100), nullable=False)
-    merchant_id = Column(String(50), nullable=False)
-    location_city = Column(String(100), nullable=True)
-    location_lat = Column(Float, nullable=True)
-    location_lng = Column(Float, nullable=True)
-    timestamp = Column(DateTime, default=utcnow)
-    payment_type = Column(String(50), nullable=False)
-    device_type = Column(String(50), nullable=True)
-    ip_address = Column(String(45), nullable=True)
-    os_type = Column(String(50), nullable=True)
-    bank_name = Column(String(100), nullable=True)
-    status = Column(String(20), default="pending")  # pending, approved, blocked
+    nameOrig = Column(String(100), nullable=False)
+    oldbalanceOrg = Column(Float, nullable=False)
+    newbalanceOrig = Column(Float, nullable=False)
+    nameDest = Column(String(100), nullable=False)
+    oldbalanceDest = Column(Float, nullable=False)
+    newbalanceDest = Column(Float, nullable=False)
+    
+    status = Column(String(20), default="pending")  # approved, blocked, pending
+    timestamp = Column(DateTime(timezone=True), server_default=func.now())
 
     user = relationship("User", back_populates="transactions")
-    prediction = relationship("Prediction", back_populates="transaction", uselist=False, lazy="selectin")
+    prediction = relationship("Prediction", back_populates="transaction", uselist=False, cascade="all, delete-orphan")
     alerts = relationship("Alert", back_populates="transaction", lazy="selectin")
 
 

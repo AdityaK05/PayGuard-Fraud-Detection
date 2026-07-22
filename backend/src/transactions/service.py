@@ -12,6 +12,7 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
 
+
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -42,12 +43,24 @@ class TransactionService:
         """Lazy-load the ML predictor (singleton)."""
         if cls._predictor is None:
             try:
-                from predict import FraudPredictor
+                # Import ML classes into the current namespace
+                from preprocessing import DataPreprocessor  # type: ignore
+                from feature_engineering import FeatureEngineer  # type: ignore
+
+                # CRITICAL FIX: Patch __main__ so joblib can deserialize
+                # Preprocessor.pkl which was pickled from __main__ context
+                import __main__
+                __main__.DataPreprocessor = DataPreprocessor
+                __main__.FeatureEngineer = FeatureEngineer
+
+                from predict import FraudPredictor  # type: ignore
                 models_dir = os.path.abspath(
                     os.path.join(os.path.dirname(__file__), "..", "..", "..", "ml", "models")
                 )
                 cls._predictor = FraudPredictor.load(models_dir)
             except Exception as e:
+                import traceback
+                traceback.print_exc()
                 print(f"  ⚠ ML models not loaded: {e}")
                 cls._predictor = None
         return cls._predictor
@@ -57,7 +70,7 @@ class TransactionService:
         """Lazy-load the SHAP explainer (singleton)."""
         if cls._explainer is None:
             try:
-                from explain import SHAPExplainer
+                from explain import SHAPExplainer  # type: ignore
                 models_dir = os.path.abspath(
                     os.path.join(os.path.dirname(__file__), "..", "..", "..", "ml", "models")
                 )
@@ -91,19 +104,14 @@ class TransactionService:
         transaction = Transaction(
             user_id=user.id,
             transaction_id=tx_id,
-            upi_id=data["upi_id"],
+            type=data["type"],
             amount=data["amount"],
-            merchant_category=data["merchant_category"],
-            merchant_id=data["merchant_id"],
-            location_city=data.get("location_city", "Unknown"),
-            location_lat=data.get("location_lat", 0.0),
-            location_lng=data.get("location_lng", 0.0),
-            timestamp=now,
-            payment_type=data["payment_type"],
-            device_type=data.get("device_type", "android"),
-            ip_address=data.get("ip_address", "0.0.0.0"),
-            os_type=data.get("os_type", "android_14"),
-            bank_name=data.get("bank_name", "SBI"),
+            nameOrig=data["nameOrig"],
+            oldbalanceOrg=data["oldbalanceOrg"],
+            newbalanceOrig=data["newbalanceOrig"],
+            nameDest=data["nameDest"],
+            oldbalanceDest=data["oldbalanceDest"],
+            newbalanceDest=data["newbalanceDest"],
             status="pending",
         )
         self.db.add(transaction)
@@ -116,9 +124,7 @@ class TransactionService:
         if predictor is not None:
             tx_data = {
                 "transaction_id": tx_id,
-                "user_id": f"USR{user.id:04d}",
                 **data,
-                "timestamp": now.isoformat(),
             }
             
             # Fetch user history (last 50 transactions to build context)
@@ -134,20 +140,14 @@ class TransactionService:
             for tx in history_txs:
                 history_data.append({
                     "transaction_id": tx.transaction_id,
-                    "user_id": f"USR{user.id:04d}",
-                    "upi_id": tx.upi_id,
+                    "type": tx.type,
                     "amount": tx.amount,
-                    "merchant_category": tx.merchant_category,
-                    "merchant_id": tx.merchant_id,
-                    "location_city": tx.location_city,
-                    "location_lat": tx.location_lat,
-                    "location_lng": tx.location_lng,
-                    "timestamp": tx.timestamp.isoformat(),
-                    "payment_type": tx.payment_type,
-                    "device_type": tx.device_type,
-                    "ip_address": tx.ip_address,
-                    "os_type": tx.os_type,
-                    "bank_name": tx.bank_name,
+                    "nameOrig": tx.nameOrig,
+                    "oldbalanceOrg": tx.oldbalanceOrg,
+                    "newbalanceOrig": tx.newbalanceOrig,
+                    "nameDest": tx.nameDest,
+                    "oldbalanceDest": tx.oldbalanceDest,
+                    "newbalanceDest": tx.newbalanceDest,
                 })
 
             result = predictor.predict(tx_data, history=history_data)
@@ -325,11 +325,10 @@ class TransactionService:
             tx_dict = {
                 "id": tx.id,
                 "transaction_id": tx.transaction_id,
-                "upi_id": tx.upi_id,
+                "type": tx.type,
                 "amount": tx.amount,
-                "merchant_category": tx.merchant_category,
-                "location_city": tx.location_city,
-                "payment_type": tx.payment_type,
+                "nameOrig": tx.nameOrig,
+                "nameDest": tx.nameDest,
                 "status": tx.status,
                 "timestamp": tx.timestamp,
                 "risk_score": tx.prediction.risk_score if tx.prediction else None,

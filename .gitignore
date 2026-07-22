@@ -16,6 +16,7 @@ env/
 ml/models/evaluation/
 ml/datasets/*.csv
 !ml/datasets/.gitkeep
+dataset/
 
 # Node
 node_modules/

@@ -9,7 +9,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer,
 } from "recharts"
-import { BarChart3, Brain, Target } from "lucide-react"
+import { BarChart3, Target } from "lucide-react"
 import api from "@/lib/api"
 
 interface ModelMetrics {

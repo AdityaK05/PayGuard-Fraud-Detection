@@ -7,7 +7,7 @@
     "allowArbitraryExtensions": true,
     "skipLibCheck": true,
     "jsx": "react-jsx",
-    "baseUrl": ".",
+
     "paths": {
       "@/*": ["./src/*"]
     },

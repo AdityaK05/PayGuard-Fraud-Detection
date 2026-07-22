@@ -13,18 +13,14 @@ from pydantic import BaseModel, Field
 
 class TransactionCreate(BaseModel):
     """Payload for submitting a new transaction for fraud analysis."""
-    upi_id: str = Field(..., min_length=3, max_length=100, examples=["user001@oksbi"])
-    amount: float = Field(..., gt=0, le=100000, examples=[2500.0])
-    merchant_category: str = Field(..., examples=["grocery"])
-    merchant_id: str = Field(..., examples=["MER1234"])
-    location_city: str = Field(default="Mumbai", examples=["Mumbai"])
-    location_lat: float = Field(default=19.076, examples=[19.076])
-    location_lng: float = Field(default=72.877, examples=[72.877])
-    payment_type: str = Field(..., examples=["p2m"])
-    device_type: str = Field(default="android", examples=["android"])
-    ip_address: str = Field(default="0.0.0.0", examples=["103.45.67.89"])
-    os_type: str = Field(default="android_14", examples=["android_14"])
-    bank_name: str = Field(default="SBI", examples=["SBI"])
+    type: str = Field(..., examples=["PAYMENT"])
+    amount: float = Field(..., gt=0, le=10000000, examples=[2500.0])
+    nameOrig: str = Field(..., examples=["C123456"])
+    oldbalanceOrg: float = Field(..., examples=[5000.0])
+    newbalanceOrig: float = Field(..., examples=[2500.0])
+    nameDest: str = Field(..., examples=["M987654"])
+    oldbalanceDest: float = Field(..., examples=[0.0])
+    newbalanceDest: float = Field(..., examples=[2500.0])
 
 
 class PredictionResultResponse(BaseModel):
@@ -46,11 +42,10 @@ class TransactionResponse(BaseModel):
     """Transaction record with its prediction."""
     id: int
     transaction_id: str
-    upi_id: str
+    type: str
     amount: float
-    merchant_category: str
-    location_city: Optional[str]
-    payment_type: str
+    nameOrig: str
+    nameDest: str
     status: str
     timestamp: datetime
     risk_score: Optional[int] = None

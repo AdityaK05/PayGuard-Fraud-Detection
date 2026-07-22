@@ -20,6 +20,9 @@ interface Transaction {
   status: string
   risk_score?: number
   risk_level?: string
+  type?: string
+  nameOrig?: string
+  nameDest?: string
 }
 
 export default function DashboardPage() {
@@ -156,54 +159,66 @@ export default function DashboardPage() {
               No transactions yet. Submit one from the New Transaction tab!
             </div>
           ) : (
-            <table className="data-table w-full text-left">
-              <thead>
-                <tr className="text-xs uppercase tracking-widest text-[var(--color-text-muted)] border-b border-[var(--color-border)]">
-                  <th className="pb-4 font-semibold">Transaction ID</th>
-                  <th className="pb-4 font-semibold">Amount</th>
-                  <th className="pb-4 font-semibold">Status</th>
-                  <th className="pb-4 font-semibold">Risk Score</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[var(--color-border)]">
-                {transactions.map((tx) => (
-                  <tr key={tx.id} className="hover:bg-[var(--color-surface-hover)] transition-colors">
-                    <td className="py-4 font-mono text-sm text-[var(--color-text-primary)]">
-                      {tx.transaction_id}
-                    </td>
-                    <td className="py-4 text-sm text-[var(--color-text-secondary)]">
-                      ₹{tx.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </td>
-                    <td className="py-4">
-                      {tx.status === "blocked" ? (
-                        <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-[var(--color-danger-muted)] text-[var(--color-danger)] border border-[var(--color-danger)]/20">
-                          Blocked
-                        </span>
-                      ) : tx.status === "approved" ? (
-                        <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-[var(--color-success-muted)] text-[var(--color-success)] border border-[var(--color-success)]/20">
-                          Approved
-                        </span>
-                      ) : (
-                        <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-[var(--color-accent-muted)] text-[var(--color-text-primary)] border border-[var(--color-border)]">
-                          {tx.status}
-                        </span>
-                      )}
-                    </td>
-                    <td className="py-4">
-                      <span className={`text-sm font-semibold ${
-                        (tx.risk_score || 0) > 70 
-                          ? "text-[var(--color-danger)]" 
-                          : (tx.risk_score || 0) > 30 
-                            ? "text-[var(--color-warning)]" 
-                            : "text-[var(--color-success)]"
-                      }`}>
-                        {tx.risk_score ?? 0} / 100
-                      </span>
-                    </td>
+              <table className="data-table w-full text-left">
+                <thead>
+                  <tr className="text-xs uppercase tracking-widest text-[var(--color-text-muted)] border-b border-[var(--color-border)]">
+                    <th className="pb-4 font-semibold">Transaction ID</th>
+                    <th className="pb-4 font-semibold">Type</th>
+                    <th className="pb-4 font-semibold">Amount</th>
+                    <th className="pb-4 font-semibold">Origin</th>
+                    <th className="pb-4 font-semibold">Dest</th>
+                    <th className="pb-4 font-semibold">Status</th>
+                    <th className="pb-4 font-semibold">Risk Score</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-[var(--color-border)]">
+                  {transactions.map((tx) => (
+                    <tr key={tx.id} className="hover:bg-[var(--color-surface-hover)] transition-colors">
+                      <td className="py-4 font-mono text-xs text-[var(--color-text-primary)]">
+                        {tx.transaction_id}
+                      </td>
+                      <td className="py-4 font-mono text-xs font-semibold text-[var(--color-accent)]">
+                        {tx.type}
+                      </td>
+                      <td className="py-4 text-sm text-[var(--color-text-secondary)] font-medium">
+                        ₹{tx.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </td>
+                      <td className="py-4 font-mono text-xs text-[var(--color-text-muted)]">
+                        {tx.nameOrig}
+                      </td>
+                      <td className="py-4 font-mono text-xs text-[var(--color-text-muted)]">
+                        {tx.nameDest}
+                      </td>
+                      <td className="py-4">
+                        {tx.status === "blocked" ? (
+                          <span className="px-2.5 py-1 rounded-full text-[10px] uppercase font-bold bg-[var(--color-danger-muted)] text-[var(--color-danger)] border border-[var(--color-danger)]/20 shadow-[0_0_10px_rgba(244,67,54,0.1)]">
+                            Blocked
+                          </span>
+                        ) : tx.status === "approved" ? (
+                          <span className="px-2.5 py-1 rounded-full text-[10px] uppercase font-bold bg-[var(--color-success-muted)] text-[var(--color-success)] border border-[var(--color-success)]/20 shadow-[0_0_10px_rgba(76,175,80,0.1)]">
+                            Approved
+                          </span>
+                        ) : (
+                          <span className="px-2.5 py-1 rounded-full text-[10px] uppercase font-bold bg-[var(--color-accent-muted)] text-[var(--color-text-primary)] border border-[var(--color-border)]">
+                            {tx.status}
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-4">
+                        <span className={`text-sm font-bold ${
+                          (tx.risk_score || 0) > 70 
+                            ? "text-[var(--color-danger)] drop-shadow-[0_0_5px_rgba(244,67,54,0.5)]" 
+                            : (tx.risk_score || 0) > 30 
+                              ? "text-[var(--color-warning)] drop-shadow-[0_0_5px_rgba(255,152,0,0.5)]" 
+                              : "text-[var(--color-success)] drop-shadow-[0_0_5px_rgba(76,175,80,0.5)]"
+                        }`}>
+                          {tx.risk_score ?? 0}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
           )}
         </div>
       </motion.div>

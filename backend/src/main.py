@@ -29,23 +29,26 @@ async def lifespan(app: FastAPI):
     """
     # ── Startup ──────────────────────────────────────────────────
     print("=" * 60)
-    print(f"  🛡️  {settings.APP_NAME} v{settings.APP_VERSION}")
+    print(f"  [PayGuard] {settings.APP_NAME} v{settings.APP_VERSION}")
     print(f"  Environment: {settings.ENVIRONMENT}")
     print("=" * 60)
 
     # Initialize database tables
     await init_db()
-    print("  ✓ Database initialized")
+    print("  > Database initialized")
 
     # Pre-load ML models (optional: lazy-load on first request)
     try:
         from src.transactions.service import TransactionService
-        TransactionService._get_predictor()
-        print("  ✓ ML models loaded")
+        predictor = TransactionService._get_predictor()
+        if predictor is not None:
+            print("  > ML models loaded successfully")
+        else:
+            print("  [WARN] ML models NOT loaded - predictions will use random fallback!")
     except Exception as e:
-        print(f"  ⚠ ML models not available: {e}")
+        print(f"  [WARN] ML models not available: {e}")
 
-    print("  ✓ Application ready")
+    print("  > Application ready")
     print("=" * 60)
 
     yield

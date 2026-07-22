@@ -5,7 +5,6 @@
 
 import { Link } from "react-router-dom"
 import { motion } from "framer-motion"
-import { Shield, ArrowRight, BarChart3, Lock, CheckCircle } from "lucide-react"
 
 export default function LandingPage() {
   return (

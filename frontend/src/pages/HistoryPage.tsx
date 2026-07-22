@@ -4,18 +4,17 @@
 
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { History, Filter, Download, Search } from "lucide-react"
+import { History, Download, Search } from "lucide-react"
 import api from "@/lib/api"
 import { formatINR, formatDate, getRiskBadgeClass } from "@/lib/utils"
 
 interface Transaction {
   id: number
   transaction_id: string
-  upi_id: string
+  type: string
   amount: number
-  merchant_category: string
-  location_city: string | null
-  payment_type: string
+  nameOrig: string
+  nameDest: string
   status: string
   timestamp: string
   risk_score: number | null
@@ -49,8 +48,8 @@ export default function HistoryPage() {
     ? transactions.filter(
         (t) =>
           t.transaction_id.toLowerCase().includes(search.toLowerCase()) ||
-          t.upi_id.toLowerCase().includes(search.toLowerCase()) ||
-          t.merchant_category.toLowerCase().includes(search.toLowerCase())
+          t.nameOrig.toLowerCase().includes(search.toLowerCase()) ||
+          t.nameDest.toLowerCase().includes(search.toLowerCase())
       )
     : transactions
 
@@ -110,12 +109,11 @@ export default function HistoryPage() {
               <thead>
                 <tr>
                   <th>Transaction ID</th>
-                  <th>UPI ID</th>
-                  <th>Amount</th>
-                  <th>Category</th>
-                  <th>City</th>
                   <th>Type</th>
-                  <th>Risk</th>
+                  <th>Amount</th>
+                  <th>Origin</th>
+                  <th>Dest</th>
+                  <th>Risk Score</th>
                   <th>Status</th>
                   <th>Date</th>
                 </tr>
@@ -131,13 +129,12 @@ export default function HistoryPage() {
                     <td className="font-mono text-xs text-[var(--color-accent-light)]">
                       {tx.transaction_id}
                     </td>
-                    <td className="text-xs">{tx.upi_id}</td>
+                    <td className="text-xs font-semibold">{tx.type}</td>
                     <td className="font-semibold text-[var(--color-text-primary)]">
                       {formatINR(tx.amount)}
                     </td>
-                    <td className="capitalize">{tx.merchant_category.replace(/_/g, " ")}</td>
-                    <td>{tx.location_city || "—"}</td>
-                    <td className="uppercase text-xs">{tx.payment_type}</td>
+                    <td className="font-mono text-xs">{tx.nameOrig}</td>
+                    <td className="font-mono text-xs">{tx.nameDest}</td>
                     <td>
                       {tx.risk_level ? (
                         <span className={getRiskBadgeClass(tx.risk_level)}>
