@@ -144,7 +144,7 @@ class AuthService:
             user_id=user_id,
             token=access_token,
             refresh_token=refresh_token,
-            expires_at=datetime.now(timezone.utc) + timedelta(
+            expires_at=datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(
                 minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
             ),
         )
