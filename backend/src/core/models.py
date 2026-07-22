@@ -26,8 +26,8 @@ from src.core.database import Base
 
 
 def utcnow() -> datetime:
-    """Return the current UTC time (timezone-aware)."""
-    return datetime.now(timezone.utc)
+    """Return the current UTC time (timezone-naive for asyncpg/Postgres compatibility)."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 # ═══════════════════════════════════════════════════════════════════
