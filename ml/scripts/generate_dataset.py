@@ -95,9 +95,13 @@ def _generate_legitimate_transaction(
     amount = round(np.random.lognormal(mean=5.5, sigma=1.2), 2)
     amount = min(amount, 50_000.0)  # UPI cap
 
-    # Legitimate transactions happen mostly during daytime (8 AM – 10 PM)
-    hour = int(np.random.normal(loc=14, scale=3))
-    hour = max(8, min(hour, 22))
+    # Allow some legitimate transactions late at night (5%) to prevent overfitting
+    if random.random() < 0.95:
+        hour = int(np.random.normal(loc=14, scale=3))
+        hour = max(5, min(hour, 22))
+    else:
+        hour = random.choice([0, 1, 2, 3, 4, 23])
+        
     timestamp = base_time + timedelta(
         days=random.randint(0, 89),
         hours=hour,
@@ -143,12 +147,19 @@ def _generate_fraudulent_transaction(
     lat_offset = np.random.uniform(2.0, 5.0) * random.choice([-1, 1])
     lng_offset = np.random.uniform(2.0, 5.0) * random.choice([-1, 1])
 
-    # Fraudulent amounts tend to be higher
-    amount = round(np.random.lognormal(mean=8.0, sigma=1.0), 2)
-    amount = min(amount, 100_000.0)
+    # 40% of fraud happens during the day but with exceptionally high amounts
+    if random.random() < 0.4:
+        hour = int(np.random.normal(loc=14, scale=3))
+        hour = max(5, min(hour, 22))
+        amount = round(np.random.lognormal(mean=10.0, sigma=1.0), 2) # VERY high amount
+    else:
+        # 60% happens late night with moderately high amounts
+        hour = random.choice([0, 1, 2, 3, 4, 23])
+        amount = round(np.random.lognormal(mean=8.0, sigma=1.0), 2)
+        
+    # Remove the hard UPI cap for fraud so the model learns to identify massive outliers
+    amount = min(amount, 5_000_000.0)
 
-    # Fraud often happens late at night (11 PM – 4 AM)
-    hour = random.choice([0, 1, 2, 3, 4, 23])
     timestamp = base_time + timedelta(
         days=random.randint(0, 89),
         hours=hour,
