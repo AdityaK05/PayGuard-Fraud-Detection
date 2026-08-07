@@ -98,6 +98,17 @@ async def add_process_time_header(request: Request, call_next):
 
 # ── Global Exception Handler ────────────────────────────────────
 
+from fastapi.exceptions import RequestValidationError
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    """Handle standard HTTP exceptions."""
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail},
+    )
+
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     """Catch-all exception handler for unhandled errors."""
@@ -106,6 +117,7 @@ async def global_exception_handler(request: Request, exc: Exception):
         content={
             "detail": "An internal error occurred. Please try again later.",
             "type": type(exc).__name__,
+            "msg": str(exc),
         },
     )
 
