@@ -1,6 +1,5 @@
 /**
  * PayGuard – New Transaction Page
- * Beautiful glassmorphic UI to simulate real-world transactions.
  */
 
 import { useState } from "react"
@@ -20,14 +19,16 @@ interface PredictionResult {
 
 export default function NewTransactionPage() {
   const [formData, setFormData] = useState({
-    type: "PAYMENT",
+    payment_type: "p2m",
     amount: "9839.64",
-    nameOrig: "C1231006815",
-    oldbalanceOrg: "170136.00",
-    newbalanceOrig: "160296.36",
-    nameDest: "M1979787155",
-    oldbalanceDest: "0.00",
-    newbalanceDest: "0.00"
+    merchant_category: "electronics",
+    merchant_id: "MER1234",
+    bank_name: "HDFC",
+    location_city: "Mumbai",
+    device_type: "android",
+    os_type: "android_14",
+    ip_address: "103.1.2.3",
+    time_of_day: "day"
   })
 
   const [loading, setLoading] = useState(false)
@@ -40,16 +41,28 @@ export default function NewTransactionPage() {
     setError("")
     setResult(null)
 
+    // Generate a fake ISO string based on selected time
+    const fakeDate = new Date()
+    if (formData.time_of_day === "late_night") {
+      fakeDate.setUTCHours(2, 0, 0, 0) // 2 AM UTC
+    } else {
+      fakeDate.setUTCHours(14, 0, 0, 0) // 2 PM UTC
+    }
+
     try {
       const { data } = await api.post("/predict", {
-        type: formData.type,
+        payment_type: formData.payment_type,
         amount: parseFloat(formData.amount),
-        nameOrig: formData.nameOrig,
-        oldbalanceOrg: parseFloat(formData.oldbalanceOrg),
-        newbalanceOrig: parseFloat(formData.newbalanceOrig),
-        nameDest: formData.nameDest,
-        oldbalanceDest: parseFloat(formData.oldbalanceDest),
-        newbalanceDest: parseFloat(formData.newbalanceDest),
+        merchant_category: formData.merchant_category,
+        merchant_id: formData.merchant_id,
+        bank_name: formData.bank_name,
+        location_city: formData.location_city,
+        location_lat: 19.076, // Mocked for simplicity
+        location_lng: 72.877, // Mocked for simplicity
+        device_type: formData.device_type,
+        os_type: formData.os_type,
+        ip_address: formData.ip_address,
+        timestamp: fakeDate.toISOString()
       })
       
       setTimeout(() => {
@@ -59,7 +72,7 @@ export default function NewTransactionPage() {
     } catch (err: any) {
       const detail = err.response?.data?.detail
       if (Array.isArray(detail)) {
-        setError(detail[0]?.msg || "Validation error")
+        setError(`${detail[0]?.loc[1]}: ${detail[0]?.msg}`)
       } else {
         setError(detail || "Failed to process transaction.")
       }
@@ -72,97 +85,107 @@ export default function NewTransactionPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="max-w-7xl mx-auto pb-12">
       <motion.div 
-        initial={{ opacity: 0, y: -20 }}
+        initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
       >
-        <h2 className="text-2xl font-bold text-white tracking-wide flex items-center gap-2">
-          <ArrowRightLeft className="w-6 h-6 text-[var(--color-accent)]" />
+        <h2 className="text-xl font-bold text-[var(--t1)] tracking-wide flex items-center gap-2">
+          <ArrowRightLeft className="w-5 h-5 text-[var(--t2)]" />
           Fraud Simulator
         </h2>
-        <p className="text-[var(--color-text-muted)] text-sm mt-1">
-          Test the XGBoost ML Pipeline against the PaySim financial dataset.
+        <p className="text-[var(--t3)] text-sm mt-1">
+          Test the ML Pipeline against custom UPI transaction parameters.
         </p>
       </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         {/* Left Side: Input Form */}
         <motion.div
-          initial={{ opacity: 0, x: -20 }}
+          initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
-          className="lg:col-span-7 glass-card p-8 rounded-2xl relative overflow-hidden group"
+          className="lg:col-span-7 card p-6"
         >
-          {/* Subtle animated background gradient */}
-          <div className="absolute -top-32 -right-32 w-64 h-64 bg-[var(--color-accent)]/10 rounded-full blur-3xl group-hover:bg-[var(--color-accent)]/20 transition-all duration-700"></div>
-
-          <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
+          <form onSubmit={handleSubmit} className="space-y-6">
             
-            <div className="grid grid-cols-2 gap-6">
-              <div className="space-y-1 col-span-2 sm:col-span-1">
-                <label className="text-[11px] text-[var(--color-text-muted)] uppercase font-semibold tracking-wider">Transaction Type</label>
-                <select name="type" value={formData.type} onChange={handleChange} className="input-field appearance-none">
-                  <option value="PAYMENT">PAYMENT</option>
-                  <option value="TRANSFER">TRANSFER</option>
-                  <option value="CASH_OUT">CASH_OUT</option>
-                  <option value="CASH_IN">CASH_IN</option>
-                  <option value="DEBIT">DEBIT</option>
+            <div className="grid grid-cols-3 gap-6">
+              <div className="space-y-1 col-span-3 sm:col-span-1">
+                <label className="text-[11px] text-[var(--t2)] uppercase font-bold tracking-wider">Payment Type</label>
+                <select name="payment_type" value={formData.payment_type} onChange={handleChange} className="input-field appearance-none">
+                  <option value="p2p">Peer to Peer (P2P)</option>
+                  <option value="p2m">Peer to Merchant (P2M)</option>
+                  <option value="bill_payment">Bill Payment</option>
                 </select>
               </div>
-              <div className="space-y-1 col-span-2 sm:col-span-1">
-                <label className="text-[11px] text-[var(--color-text-muted)] uppercase font-semibold tracking-wider">Amount (₹)</label>
+              <div className="space-y-1 col-span-3 sm:col-span-1">
+                <label className="text-[11px] text-[var(--t2)] uppercase font-bold tracking-wider">Amount (₹)</label>
                 <input required type="number" step="0.01" name="amount" value={formData.amount} onChange={handleChange} className="input-field" />
               </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 rounded-xl bg-black/20 border border-white/5">
-              <div className="space-y-1 sm:col-span-3 pb-2 border-b border-white/5 mb-2">
-                <h4 className="text-xs font-semibold text-white/70 uppercase tracking-widest">Origin Details</h4>
-              </div>
-              <div className="space-y-1">
-                <label className="text-[10px] text-[var(--color-text-muted)] uppercase font-semibold tracking-wider">Account ID</label>
-                <input required type="text" name="nameOrig" value={formData.nameOrig} onChange={handleChange} className="input-field text-sm" />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[10px] text-[var(--color-text-muted)] uppercase font-semibold tracking-wider">Old Balance</label>
-                <input required type="number" step="0.01" name="oldbalanceOrg" value={formData.oldbalanceOrg} onChange={handleChange} className="input-field text-sm" />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[10px] text-[var(--color-text-muted)] uppercase font-semibold tracking-wider">New Balance</label>
-                <input required type="number" step="0.01" name="newbalanceOrig" value={formData.newbalanceOrig} onChange={handleChange} className="input-field text-sm" />
+              <div className="space-y-1 col-span-3 sm:col-span-1">
+                <label className="text-[11px] text-[var(--t2)] uppercase font-bold tracking-wider">Time of Day</label>
+                <select name="time_of_day" value={formData.time_of_day} onChange={handleChange} className="input-field appearance-none">
+                  <option value="day">Daytime (2:00 PM)</option>
+                  <option value="late_night">Late Night (2:00 AM)</option>
+                </select>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 rounded-xl bg-black/20 border border-white/5">
-              <div className="space-y-1 sm:col-span-3 pb-2 border-b border-white/5 mb-2">
-                <h4 className="text-xs font-semibold text-white/70 uppercase tracking-widest">Destination Details</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-5 rounded-xl border border-[var(--card-border)] bg-[rgba(255,255,255,0.02)]">
+              <div className="space-y-1 sm:col-span-2 pb-2 mb-2 border-b border-[var(--card-border)]">
+                <h4 className="text-[11px] font-bold text-[var(--t1)] uppercase tracking-widest">Merchant Details</h4>
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] text-[var(--color-text-muted)] uppercase font-semibold tracking-wider">Account ID</label>
-                <input required type="text" name="nameDest" value={formData.nameDest} onChange={handleChange} className="input-field text-sm" />
+                <label className="text-[10px] text-[var(--t3)] uppercase font-bold tracking-wider">Category</label>
+                <input required type="text" name="merchant_category" value={formData.merchant_category} onChange={handleChange} className="input-field" />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] text-[var(--color-text-muted)] uppercase font-semibold tracking-wider">Old Balance</label>
-                <input required type="number" step="0.01" name="oldbalanceDest" value={formData.oldbalanceDest} onChange={handleChange} className="input-field text-sm" />
+                <label className="text-[10px] text-[var(--t3)] uppercase font-bold tracking-wider">Merchant ID</label>
+                <input required type="text" name="merchant_id" value={formData.merchant_id} onChange={handleChange} className="input-field" />
+              </div>
+              <div className="space-y-1 sm:col-span-2">
+                <label className="text-[10px] text-[var(--t3)] uppercase font-bold tracking-wider">Bank Name</label>
+                <input required type="text" name="bank_name" value={formData.bank_name} onChange={handleChange} className="input-field" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-5 rounded-xl border border-[var(--card-border)] bg-[rgba(255,255,255,0.02)]">
+              <div className="space-y-1 sm:col-span-2 pb-2 mb-2 border-b border-[var(--card-border)]">
+                <h4 className="text-[11px] font-bold text-[var(--t1)] uppercase tracking-widest">Device & Location</h4>
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] text-[var(--color-text-muted)] uppercase font-semibold tracking-wider">New Balance</label>
-                <input required type="number" step="0.01" name="newbalanceDest" value={formData.newbalanceDest} onChange={handleChange} className="input-field text-sm" />
+                <label className="text-[10px] text-[var(--t3)] uppercase font-bold tracking-wider">City</label>
+                <input required type="text" name="location_city" value={formData.location_city} onChange={handleChange} className="input-field" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] text-[var(--t3)] uppercase font-bold tracking-wider">IP Address</label>
+                <input required type="text" name="ip_address" value={formData.ip_address} onChange={handleChange} className="input-field" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] text-[var(--t3)] uppercase font-bold tracking-wider">Device</label>
+                <select name="device_type" value={formData.device_type} onChange={handleChange} className="input-field appearance-none">
+                  <option value="android">Android</option>
+                  <option value="ios">iOS</option>
+                  <option value="web">Web</option>
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] text-[var(--t3)] uppercase font-bold tracking-wider">OS Version</label>
+                <input required type="text" name="os_type" value={formData.os_type} onChange={handleChange} className="input-field" />
               </div>
             </div>
 
             {error && (
-              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="p-3 bg-[var(--color-danger)]/10 border border-[var(--color-danger)]/30 rounded-lg text-[var(--color-danger)] text-sm flex items-center gap-2">
+              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="p-3 bg-red-900/20 border border-red-500/30 rounded-lg text-red-400 text-sm flex items-center gap-2">
                 <AlertOctagon className="w-4 h-4" />
                 {error}
               </motion.div>
             )}
 
-            <div className="pt-4">
-              <button type="submit" disabled={loading} className="btn-primary w-full py-3.5 text-base rounded-xl shadow-[0_0_20px_rgba(33,150,243,0.3)] hover:shadow-[0_0_30px_rgba(33,150,243,0.5)] transition-all">
-                {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Run AI Prediction"}
+            <div className="pt-2">
+              <button type="submit" disabled={loading} className="btn-primary w-full py-3 text-[13px] font-bold">
+                {loading ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : "Run AI Prediction"}
               </button>
             </div>
           </form>
@@ -170,46 +193,46 @@ export default function NewTransactionPage() {
 
         {/* Right Side: Prediction Result */}
         <motion.div
-          initial={{ opacity: 0, x: 20 }}
+          initial={{ opacity: 0, x: 10 }}
           animate={{ opacity: 1, x: 0 }}
-          className="lg:col-span-5 glass-card p-8 rounded-2xl flex flex-col items-center justify-center relative min-h-[400px]"
+          className="lg:col-span-5 card p-8 flex flex-col items-center justify-center relative min-h-[400px]"
         >
           {loading ? (
-            <div className="flex flex-col items-center text-[var(--color-text-muted)]">
-              <Loader2 className="w-12 h-12 animate-spin mb-6 text-[var(--color-accent)] drop-shadow-[0_0_15px_rgba(33,150,243,0.5)]" />
-              <p className="animate-pulse tracking-widest uppercase text-xs font-semibold">Running XGBoost Model...</p>
+            <div className="flex flex-col items-center text-[var(--t3)]">
+              <Loader2 className="w-10 h-10 animate-spin mb-4 text-[var(--t1)]" />
+              <p className="animate-pulse tracking-widest uppercase text-[10px] font-bold">Analyzing Transaction...</p>
             </div>
           ) : result ? (
             <AnimatePresence>
               <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
+                initial={{ scale: 0.95, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 className="flex flex-col items-center w-full"
               >
-                <div className={`flex items-center gap-2 px-6 py-2.5 rounded-full border text-sm font-bold mb-10 uppercase tracking-widest shadow-lg ${
+                <div className={`flex items-center gap-2 px-5 py-2 rounded-full border text-xs font-bold mb-8 uppercase tracking-widest ${
                   result.prediction === "approved" 
-                    ? "bg-[var(--color-success)]/10 border-[var(--color-success)]/50 text-[var(--color-success)] shadow-[0_0_20px_rgba(76,175,80,0.2)]" 
-                    : "bg-[var(--color-danger)]/10 border-[var(--color-danger)]/50 text-[var(--color-danger)] shadow-[0_0_20px_rgba(244,67,54,0.2)]"
+                    ? "bg-green-500/10 border-green-500/30 text-green-400" 
+                    : "bg-red-500/10 border-red-500/30 text-red-400"
                 }`}>
-                  {result.prediction === "approved" ? <ShieldCheck className="w-5 h-5" /> : <AlertOctagon className="w-5 h-5" />}
+                  {result.prediction === "approved" ? <ShieldCheck className="w-4 h-4" /> : <AlertOctagon className="w-4 h-4" />}
                   {result.prediction === "approved" ? "Safe Transaction" : "Fraud Detected"}
                 </div>
                 
                 <RiskGauge 
                   score={result.prediction === "approved" ? Math.round((1 - result.fraud_probability) * 100) : Math.round(result.fraud_probability * 100)} 
-                  size={260} 
+                  size={220} 
                   label="Confidence" 
                 />
                 
-                <div className="mt-8 text-center space-y-1">
-                  <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider">Risk Score</p>
-                  <p className="text-2xl font-bold text-white">{result.risk_score} <span className="text-sm font-normal text-white/50">/ 100</span></p>
+                <div className="mt-6 text-center space-y-1">
+                  <p className="text-[10px] text-[var(--t3)] uppercase tracking-wider font-bold">Risk Score</p>
+                  <p className="text-2xl font-bold text-[var(--t1)]">{result.risk_score} <span className="text-xs font-normal text-[var(--t3)]">/ 100</span></p>
                 </div>
               </motion.div>
             </AnimatePresence>
           ) : (
-             <div className="flex flex-col items-center opacity-20">
-               <RiskGauge score={0} size={260} label="Awaiting Input" />
+             <div className="flex flex-col items-center opacity-30">
+               <RiskGauge score={0} size={220} label="Awaiting Input" />
              </div>
           )}
         </motion.div>

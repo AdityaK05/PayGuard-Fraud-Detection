@@ -66,7 +66,7 @@ class FraudPredictor:
         
         df_features = df_features_all.iloc[[-1]].copy()
         
-        for col in ["isFraud", "step", "nameOrig", "nameDest", "isFlaggedFraud"]:
+        for col in ["is_fraud", "transaction_id", "user_id", "upi_id", "timestamp", "ip_address", "merchant_id"]:
             if col in df_features.columns:
                 df_features = df_features.drop(columns=[col])
                 

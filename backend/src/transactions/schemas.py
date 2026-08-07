@@ -13,14 +13,18 @@ from pydantic import BaseModel, Field
 
 class TransactionCreate(BaseModel):
     """Payload for submitting a new transaction for fraud analysis."""
-    type: str = Field(..., examples=["PAYMENT"])
+    payment_type: str = Field(..., examples=["p2p", "p2m", "bill_payment"])
     amount: float = Field(..., gt=0, le=10000000, examples=[2500.0])
-    nameOrig: str = Field(..., examples=["C123456"])
-    oldbalanceOrg: float = Field(..., examples=[5000.0])
-    newbalanceOrig: float = Field(..., examples=[2500.0])
-    nameDest: str = Field(..., examples=["M987654"])
-    oldbalanceDest: float = Field(..., examples=[0.0])
-    newbalanceDest: float = Field(..., examples=[2500.0])
+    merchant_category: str = Field(..., examples=["electronics", "grocery"])
+    merchant_id: str = Field(..., examples=["MER1234"])
+    location_city: str = Field(..., examples=["Mumbai"])
+    location_lat: float = Field(..., examples=[19.076])
+    location_lng: float = Field(..., examples=[72.877])
+    device_type: str = Field(..., examples=["android", "ios"])
+    ip_address: str = Field(..., examples=["103.1.2.3"])
+    os_type: str = Field(..., examples=["android_14"])
+    bank_name: str = Field(..., examples=["HDFC"])
+    timestamp: Optional[str] = None
 
 
 class PredictionResultResponse(BaseModel):
@@ -42,10 +46,11 @@ class TransactionResponse(BaseModel):
     """Transaction record with its prediction."""
     id: int
     transaction_id: str
-    type: str
+    payment_type: str
     amount: float
-    nameOrig: str
-    nameDest: str
+    merchant_category: str
+    merchant_id: str
+    location_city: str
     status: str
     timestamp: datetime
     risk_score: Optional[int] = None

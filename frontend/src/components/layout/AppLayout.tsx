@@ -7,8 +7,8 @@ export default function AppLayout() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--color-background)]">
-        <div className="w-10 h-10 border-3 border-[var(--color-accent)] border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--page-bg)" }}>
+        <div className="w-8 h-8 rounded-full animate-spin" style={{ border: "2px solid rgba(255,255,255,0.1)", borderTopColor: "var(--t1)" }} />
       </div>
     )
   }
@@ -18,15 +18,11 @@ export default function AppLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--color-background)] flex">
-      {/* Sidebar is fixed, main content takes the rest */}
+    <div className="min-h-screen" style={{ background: "var(--page-bg)" }}>
       <Sidebar />
-      <div className="flex-1 ml-[260px]">
-        {/* We removed Topbar to match the screenshot cleaner look. Navigation happens entirely in Sidebar or page headers. */}
-        <main className="p-6">
-          <Outlet />
-        </main>
-      </div>
+      <main style={{ marginLeft: 220, padding: "28px 32px", position: "relative", zIndex: 1 }}>
+        <Outlet />
+      </main>
     </div>
   )
 }

@@ -76,7 +76,7 @@ class TransactionService:
                 )
                 cls._explainer = SHAPExplainer.load(models_dir)
             except Exception as e:
-                print(f"  ⚠ SHAP explainer not loaded: {e}")
+                print(f"  [WARNING] SHAP explainer not loaded: {e}")
                 cls._explainer = None
         return cls._explainer
 
@@ -104,14 +104,17 @@ class TransactionService:
         transaction = Transaction(
             user_id=user.id,
             transaction_id=tx_id,
-            type=data["type"],
+            payment_type=data["payment_type"],
             amount=data["amount"],
-            nameOrig=data["nameOrig"],
-            oldbalanceOrg=data["oldbalanceOrg"],
-            newbalanceOrig=data["newbalanceOrig"],
-            nameDest=data["nameDest"],
-            oldbalanceDest=data["oldbalanceDest"],
-            newbalanceDest=data["newbalanceDest"],
+            merchant_category=data["merchant_category"],
+            merchant_id=data["merchant_id"],
+            location_city=data["location_city"],
+            location_lat=data["location_lat"],
+            location_lng=data["location_lng"],
+            device_type=data["device_type"],
+            ip_address=data["ip_address"],
+            os_type=data["os_type"],
+            bank_name=data["bank_name"],
             status="pending",
         )
         self.db.add(transaction)
@@ -124,8 +127,13 @@ class TransactionService:
         if predictor is not None:
             tx_data = {
                 "transaction_id": tx_id,
-                **data,
+                "timestamp": data.get("timestamp") or now.isoformat(),
             }
+            for k, v in data.items():
+                if isinstance(v, str) and k != "timestamp":
+                    tx_data[k] = v.lower()
+                else:
+                    tx_data[k] = v
             
             # Fetch user history (last 50 transactions to build context)
             history_result = await self.db.execute(
@@ -140,14 +148,18 @@ class TransactionService:
             for tx in history_txs:
                 history_data.append({
                     "transaction_id": tx.transaction_id,
-                    "type": tx.type,
+                    "payment_type": tx.payment_type,
                     "amount": tx.amount,
-                    "nameOrig": tx.nameOrig,
-                    "oldbalanceOrg": tx.oldbalanceOrg,
-                    "newbalanceOrig": tx.newbalanceOrig,
-                    "nameDest": tx.nameDest,
-                    "oldbalanceDest": tx.oldbalanceDest,
-                    "newbalanceDest": tx.newbalanceDest,
+                    "merchant_category": tx.merchant_category,
+                    "merchant_id": tx.merchant_id,
+                    "location_city": tx.location_city,
+                    "location_lat": tx.location_lat,
+                    "location_lng": tx.location_lng,
+                    "device_type": tx.device_type,
+                    "ip_address": tx.ip_address,
+                    "os_type": tx.os_type,
+                    "bank_name": tx.bank_name,
+                    "timestamp": tx.timestamp.isoformat() if tx.timestamp else None,
                 })
 
             result = predictor.predict(tx_data, history=history_data)

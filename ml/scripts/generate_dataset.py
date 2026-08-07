@@ -219,13 +219,13 @@ def main() -> None:
     df = generate_dataset()
 
     df.to_csv(OUTPUT_FILE, index=False)
-    print(f"\n✓ Dataset saved to: {OUTPUT_FILE}")
+    print(f"\n> Dataset saved to: {OUTPUT_FILE}")
     print(f"  Total transactions : {len(df):,}")
     print(f"  Legitimate         : {(df['is_fraud'] == 0).sum():,}")
     print(f"  Fraudulent         : {(df['is_fraud'] == 1).sum():,}")
     print(f"  Fraud rate         : {df['is_fraud'].mean():.2%}")
     print(f"  Unique users       : {df['user_id'].nunique()}")
-    print(f"  Date range         : {df['timestamp'].min()} → {df['timestamp'].max()}")
+    print(f"  Date range         : {df['timestamp'].min()} -> {df['timestamp'].max()}")
     print(f"  Columns            : {list(df.columns)}")
 
 

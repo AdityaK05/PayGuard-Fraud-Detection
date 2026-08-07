@@ -1,228 +1,154 @@
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-} from "recharts"
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 import api from "@/lib/api"
-import RiskGauge from "@/components/ui/RiskGauge"
 
-interface DashboardData {
-  total_transactions: number
-  total_fraud: number
-  avg_risk_score: number
-  daily_transactions: Array<{ day: string, safe: number, risk: number }>
-}
+interface Stats { total_transactions:number; total_fraud:number; avg_risk_score:number; daily_transactions?:{day:string;safe:number;risk:number}[] }
+interface Tx { id:number; transaction_id:string; amount:number; status:string; payment_type?:string; merchant_category?:string }
 
-interface Transaction {
-  id: number
-  transaction_id: string
-  amount: number
-  status: string
-  risk_score?: number
-  risk_level?: string
-  type?: string
-  nameOrig?: string
-  nameDest?: string
+const CHART_SEED = [{day:"Mon",safe:18,risk:3},{day:"Tue",safe:25,risk:5},{day:"Wed",safe:14,risk:2},{day:"Thu",safe:30,risk:8},{day:"Fri",safe:22,risk:4},{day:"Sat",safe:10,risk:1},{day:"Sun",safe:16,risk:2}]
+
+const ic = {
+  empty: <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="1.3" className="w-14 h-14" style={{color:"var(--t3)"}}><rect x="6" y="10" width="36" height="24" rx="4"/><path d="M6 18h36"/><circle cx="14" cy="26" r="2"/></svg>,
 }
 
 export default function DashboardPage() {
-  const [data, setData] = useState<DashboardData | null>(null)
-  const [transactions, setTransactions] = useState<Transaction[]>([])
-  const [loading, setLoading] = useState(true)
+  const [s, setS] = useState<Stats|null>(null)
+  const [txs, setTxs] = useState<Tx[]>([])
+  const [ok, setOk] = useState(false)
 
   useEffect(() => {
-    const fetchDashboard = async () => {
-      try {
-        const [dashRes, txRes] = await Promise.all([
-          api.get("/dashboard"),
-          api.get("/transactions?per_page=5")
-        ])
-        setData(dashRes.data)
-        setTransactions(txRes.data.transactions)
-      } catch (error) {
-        console.error("Failed to fetch dashboard data", error)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchDashboard()
+    Promise.all([api.get("/dashboard"), api.get("/transactions?per_page=8")])
+      .then(([a,b]) => { setS(a.data); setTxs(b.data.transactions) })
+      .catch(() => {})
+      .finally(() => setOk(true))
   }, [])
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="w-10 h-10 border-3 border-[var(--color-accent)] border-t-transparent rounded-full animate-spin" />
-      </div>
-    )
-  }
+  if (!ok) return (
+    <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"60vh"}}>
+      <div style={{width:24,height:24,borderRadius:"50%",border:"2px solid var(--card-border)",borderTopColor:"var(--t1)",animation:"spin .6s linear infinite"}}/>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+    </div>
+  )
 
-  // Fallback for empty chart data
-  const chartData = data?.daily_transactions?.length 
-    ? data.daily_transactions 
-    : [{ day: "1", safe: 0, risk: 0 }]
+  const risk  = Math.round(s?.avg_risk_score ?? 0)
+  const chart = s?.daily_transactions?.length ? s.daily_transactions : CHART_SEED
+
+  const radius = 64
+  const circumference = 2 * Math.PI * radius
+  const strokeOffset = circumference - (risk / 100) * circumference
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
+    <div style={{maxWidth:1280,margin:"0 auto",padding:"0"}}>
       
-      {/* Top Section - Chart & Stats */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Top Grid: Risk Index & Weekly Activity */}
+      <div style={{display:"grid",gridTemplateColumns:"340px 1fr",gap:24,marginBottom:24}}>
         
-        {/* Left Column: Stats & Gauge */}
-        <div className="lg:col-span-1 space-y-6">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="glass-card p-6 h-[400px] flex flex-col"
-          >
-            <h3 className="text-sm font-semibold text-white mb-6">Prioritize Overview</h3>
-            <div className="flex-1 flex items-center justify-center">
-              <RiskGauge
-                score={100 - Math.round(data?.avg_risk_score || 0)} 
-                size={220}
-                label="System Health"
-              />
-            </div>
-            <div className="mt-4 text-center">
-              <p className="text-xs text-[var(--color-text-secondary)]">
-                Analyzed <span className="text-white font-semibold">{data?.total_transactions || 0}</span> transactions
-              </p>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Right Column: Large Area Chart */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="glass-card p-6 lg:col-span-2 h-[400px] flex flex-col"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-sm font-semibold text-white">System Security (30 Days)</h3>
-            <div className="flex gap-4">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-[var(--color-success)]" />
-                <span className="text-xs text-[var(--color-text-secondary)]">Safe</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-[var(--color-danger)]" />
-                <span className="text-xs text-[var(--color-text-secondary)]">Fraud Risk</span>
+        {/* Risk Index */}
+        <motion.div initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} className="card" style={{padding:24, display:"flex", flexDirection:"column"}}>
+          <h2 style={{fontSize:12,fontWeight:600,color:"var(--t1)", textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:32}}>Risk Index</h2>
+          <div style={{flex:1, display:"flex", alignItems:"center", justifyContent:"center"}}>
+            <div style={{position:"relative", width:160, height:160}}>
+              <svg width="160" height="160" viewBox="0 0 160 160" style={{transform:"rotate(-90deg)"}}>
+                <circle cx="80" cy="80" r={radius} fill="none" stroke="var(--card-border)" strokeWidth="12" />
+                <circle 
+                  cx="80" cy="80" r={radius} 
+                  fill="none" 
+                  stroke="var(--t1)" 
+                  strokeWidth="12" 
+                  strokeDasharray={circumference} 
+                  strokeDashoffset={strokeOffset} 
+                  strokeLinecap="round" 
+                  style={{transition:"stroke-dashoffset 1s ease-in-out"}}
+                />
+              </svg>
+              <div style={{position:"absolute", top:0, left:0, right:0, bottom:0, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center"}}>
+                <span style={{fontSize:32, fontWeight:700, color:"var(--t1)", letterSpacing:"-0.02em"}}>{risk}%</span>
               </div>
             </div>
           </div>
-          
-          <div className="flex-1">
+        </motion.div>
+
+        {/* Weekly Activity */}
+        <motion.div initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{delay:0.05}} className="card" style={{padding:24, display:"flex", flexDirection:"column"}}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:24}}>
+            <h2 style={{fontSize:12,fontWeight:600,color:"var(--t1)", textTransform:"uppercase", letterSpacing:"0.05em"}}>Weekly Activity</h2>
+            <div style={{display:"flex",gap:16}}>
+              <span style={{display:"flex",alignItems:"center",gap:6,fontSize:11,color:"var(--t3)",fontWeight:500}}>
+                <span style={{width:8,height:8,borderRadius:"50%",background:"var(--t1)",display:"inline-block"}}/> Safe
+              </span>
+              <span style={{display:"flex",alignItems:"center",gap:6,fontSize:11,color:"var(--t3)",fontWeight:500}}>
+                <span style={{width:8,height:8,borderRadius:"50%",background:"var(--t3)",display:"inline-block"}}/> Fraud
+              </span>
+            </div>
+          </div>
+          <div style={{flex:1, minHeight: 240, marginLeft:-20}}>
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+              <AreaChart data={chart} margin={{left:0,bottom:0,top:10}}>
                 <defs>
                   <linearGradient id="colorSafe" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--color-success)" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="var(--color-success)" stopOpacity={0.01} />
+                    <stop offset="5%" stopColor="var(--t1)" stopOpacity={0.2}/>
+                    <stop offset="95%" stopColor="var(--t1)" stopOpacity={0}/>
                   </linearGradient>
                   <linearGradient id="colorRisk" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--color-danger)" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="var(--color-danger)" stopOpacity={0.01} />
+                    <stop offset="5%" stopColor="var(--t3)" stopOpacity={0.2}/>
+                    <stop offset="95%" stopColor="var(--t3)" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                <XAxis dataKey="day" tick={{ fill: "#64748b", fontSize: 11 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: "#64748b", fontSize: 11 }} axisLine={false} tickLine={false} />
-                <Tooltip
-                  contentStyle={{
-                    background: "#0B1B2D",
-                    border: "1px solid rgba(255,255,255,0.1)",
-                    borderRadius: "8px",
-                    color: "#fff",
-                  }}
+                <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="var(--card-border)"/>
+                <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{fill:"var(--t3)",fontSize:11}} dy={10}/>
+                <YAxis axisLine={false} tickLine={false} tick={{fill:"var(--t3)",fontSize:11}}/>
+                <Tooltip 
+                  contentStyle={{background:"var(--card-bg)",border:"1px solid var(--card-border)",borderRadius:8,color:"var(--t1)",fontSize:12,boxShadow:"0 10px 15px -3px rgba(0,0,0,0.5)"}} 
+                  itemStyle={{color:"var(--t1)"}}
+                  cursor={{stroke: 'var(--card-border)'}}
                 />
-                <Area type="monotone" dataKey="safe" stroke="var(--color-success)" fill="url(#colorSafe)" strokeWidth={3} />
-                <Area type="monotone" dataKey="risk" stroke="var(--color-danger)" fill="url(#colorRisk)" strokeWidth={3} />
+                <Area type="monotone" dataKey="risk" stroke="var(--t3)" strokeWidth={2} fillOpacity={1} fill="url(#colorRisk)" />
+                <Area type="monotone" dataKey="safe" stroke="var(--t1)" strokeWidth={2} fillOpacity={1} fill="url(#colorSafe)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </motion.div>
+
       </div>
 
-      {/* Recent Transactions Table */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        className="glass-card p-6"
-      >
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-sm font-semibold text-white">Recent Transactions</h3>
+      {/* Bottom Grid: Recent Transactions */}
+      <motion.div initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{delay:0.1}} className="card" style={{padding:0,display:"flex",flexDirection:"column"}}>
+        <div style={{padding:"24px 24px 16px", display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+          <h2 style={{fontSize:12,fontWeight:600,color:"var(--t1)", textTransform:"uppercase", letterSpacing:"0.05em"}}>Recent Transactions</h2>
         </div>
-        <div className="overflow-x-auto">
-          {transactions.length === 0 ? (
-            <div className="text-center py-10 text-[var(--color-text-muted)] text-sm">
-              No transactions yet. Submit one from the New Transaction tab!
-            </div>
-          ) : (
-              <table className="data-table w-full text-left">
-                <thead>
-                  <tr className="text-xs uppercase tracking-widest text-[var(--color-text-muted)] border-b border-[var(--color-border)]">
-                    <th className="pb-4 font-semibold">Transaction ID</th>
-                    <th className="pb-4 font-semibold">Type</th>
-                    <th className="pb-4 font-semibold">Amount</th>
-                    <th className="pb-4 font-semibold">Origin</th>
-                    <th className="pb-4 font-semibold">Dest</th>
-                    <th className="pb-4 font-semibold">Status</th>
-                    <th className="pb-4 font-semibold">Risk Score</th>
+        {txs.length===0 ? (
+          <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16,paddingTop:40,paddingBottom:60}}>
+            {ic.empty}
+            <p style={{fontSize:13,color:"var(--t3)"}}>No transactions yet</p>
+          </div>
+        ) : (
+          <div style={{flex:1,overflowX:"auto"}}>
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th style={{paddingLeft:24}}>Transaction ID</th>
+                  <th>Category</th>
+                  <th>Status</th>
+                  <th style={{textAlign:"right", paddingRight:24}}>Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {txs.map(tx=>(
+                  <tr key={tx.id}>
+                    <td style={{fontFamily:"monospace",fontSize:12,color:"var(--t2)", paddingLeft:24}}>{tx.transaction_id}</td>
+                    <td style={{fontWeight:500,color:"var(--t1)"}}>{tx.merchant_category||tx.payment_type||"—"}</td>
+                    <td><span className={tx.status==="blocked"?"badge-fraud":tx.status==="approved"?"badge-safe":"badge-medium"}>{tx.status}</span></td>
+                    <td style={{textAlign:"right",fontWeight:600,color:"var(--t1)", paddingRight:24}}>₹{tx.amount.toLocaleString()}</td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-[var(--color-border)]">
-                  {transactions.map((tx) => (
-                    <tr key={tx.id} className="hover:bg-[var(--color-surface-hover)] transition-colors">
-                      <td className="py-4 font-mono text-xs text-[var(--color-text-primary)]">
-                        {tx.transaction_id}
-                      </td>
-                      <td className="py-4 font-mono text-xs font-semibold text-[var(--color-accent)]">
-                        {tx.type}
-                      </td>
-                      <td className="py-4 text-sm text-[var(--color-text-secondary)] font-medium">
-                        ₹{tx.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </td>
-                      <td className="py-4 font-mono text-xs text-[var(--color-text-muted)]">
-                        {tx.nameOrig}
-                      </td>
-                      <td className="py-4 font-mono text-xs text-[var(--color-text-muted)]">
-                        {tx.nameDest}
-                      </td>
-                      <td className="py-4">
-                        {tx.status === "blocked" ? (
-                          <span className="px-2.5 py-1 rounded-full text-[10px] uppercase font-bold bg-[var(--color-danger-muted)] text-[var(--color-danger)] border border-[var(--color-danger)]/20 shadow-[0_0_10px_rgba(244,67,54,0.1)]">
-                            Blocked
-                          </span>
-                        ) : tx.status === "approved" ? (
-                          <span className="px-2.5 py-1 rounded-full text-[10px] uppercase font-bold bg-[var(--color-success-muted)] text-[var(--color-success)] border border-[var(--color-success)]/20 shadow-[0_0_10px_rgba(76,175,80,0.1)]">
-                            Approved
-                          </span>
-                        ) : (
-                          <span className="px-2.5 py-1 rounded-full text-[10px] uppercase font-bold bg-[var(--color-accent-muted)] text-[var(--color-text-primary)] border border-[var(--color-border)]">
-                            {tx.status}
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-4">
-                        <span className={`text-sm font-bold ${
-                          (tx.risk_score || 0) > 70 
-                            ? "text-[var(--color-danger)] drop-shadow-[0_0_5px_rgba(244,67,54,0.5)]" 
-                            : (tx.risk_score || 0) > 30 
-                              ? "text-[var(--color-warning)] drop-shadow-[0_0_5px_rgba(255,152,0,0.5)]" 
-                              : "text-[var(--color-success)] drop-shadow-[0_0_5px_rgba(76,175,80,0.5)]"
-                        }`}>
-                          {tx.risk_score ?? 0}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-          )}
-        </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </motion.div>
 
     </div>
   )
 }
+

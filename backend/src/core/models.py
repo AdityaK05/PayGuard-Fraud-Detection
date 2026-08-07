@@ -82,14 +82,17 @@ class Transaction(Base):
     transaction_id = Column(String(100), unique=True, index=True)
     
     # New Real Dataset Fields
-    type = Column(String(50), nullable=False)
+    payment_type = Column(String(50), nullable=False)
     amount = Column(Float, nullable=False)
-    nameOrig = Column(String(100), nullable=False)
-    oldbalanceOrg = Column(Float, nullable=False)
-    newbalanceOrig = Column(Float, nullable=False)
-    nameDest = Column(String(100), nullable=False)
-    oldbalanceDest = Column(Float, nullable=False)
-    newbalanceDest = Column(Float, nullable=False)
+    merchant_category = Column(String(100), nullable=False)
+    merchant_id = Column(String(100), nullable=False)
+    location_city = Column(String(100), nullable=False)
+    location_lat = Column(Float, nullable=False)
+    location_lng = Column(Float, nullable=False)
+    device_type = Column(String(50), nullable=False)
+    ip_address = Column(String(50), nullable=False)
+    os_type = Column(String(50), nullable=False)
+    bank_name = Column(String(100), nullable=False)
     
     status = Column(String(20), default="pending")  # approved, blocked, pending
     timestamp = Column(DateTime(timezone=True), server_default=func.now())
