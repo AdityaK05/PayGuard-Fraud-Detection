@@ -65,7 +65,11 @@ async def init_db() -> None:
                     pass
                     
             # Drop old obsolete columns that cause IntegrityError (violating NOT NULL constraint)
-            old_columns = ["type", "nameorig", "namedest", "oldbalanceorg", "newbalanceorig", "oldbalancedest", "newbalancedest", "isfraud", "isflaggedfraud"]
+            old_columns = [
+                '"type"', '"nameOrig"', '"nameDest"', '"oldbalanceOrg"', 
+                '"newbalanceOrig"', '"oldbalanceDest"', '"newbalanceDest"', 
+                '"isFraud"', '"isFlaggedFraud"'
+            ]
             for col in old_columns:
                 try:
                     await conn.execute(text(f"ALTER TABLE transactions DROP COLUMN IF EXISTS {col} CASCADE"))
