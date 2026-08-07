@@ -55,11 +55,21 @@ async def init_db() -> None:
             "os_type VARCHAR(50) DEFAULT 'unknown'",
             "bank_name VARCHAR(100) DEFAULT 'unknown'"
         ]
-        for col in columns_to_add:
-            try:
-                await conn.execute(text(f"ALTER TABLE transactions ADD COLUMN {col}"))
-            except Exception:
-                pass  # Column already exists or SQLite doesn't support this ALTER syntax
+        
+        if "postgresql" in settings.DATABASE_URL or "postgres" in settings.DATABASE_URL:
+            # PostgreSQL supports ADD COLUMN IF NOT EXISTS
+            for col in columns_to_add:
+                try:
+                    await conn.execute(text(f"ALTER TABLE transactions ADD COLUMN IF NOT EXISTS {col}"))
+                except Exception:
+                    pass
+        else:
+            # SQLite workaround
+            for col in columns_to_add:
+                try:
+                    await conn.execute(text(f"ALTER TABLE transactions ADD COLUMN {col}"))
+                except Exception:
+                    pass
 
 
 async def get_db() -> AsyncSession:
