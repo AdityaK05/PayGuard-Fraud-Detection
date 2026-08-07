@@ -337,10 +337,10 @@ class TransactionService:
             tx_dict = {
                 "id": tx.id,
                 "transaction_id": tx.transaction_id,
-                "type": tx.type,
+                "type": tx.payment_type,
                 "amount": tx.amount,
-                "nameOrig": tx.nameOrig,
-                "nameDest": tx.nameDest,
+                "nameOrig": "Self",
+                "nameDest": f"{tx.bank_name} ({tx.merchant_id})",
                 "status": tx.status,
                 "timestamp": tx.timestamp,
                 "risk_score": tx.prediction.risk_score if tx.prediction else None,

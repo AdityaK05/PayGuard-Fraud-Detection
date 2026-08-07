@@ -63,6 +63,14 @@ async def init_db() -> None:
                     await conn.execute(text(f"ALTER TABLE transactions ADD COLUMN IF NOT EXISTS {col}"))
                 except Exception:
                     pass
+                    
+            # Drop old obsolete columns that cause IntegrityError (violating NOT NULL constraint)
+            old_columns = ["type", "nameorig", "namedest", "oldbalanceorg", "newbalanceorig", "oldbalancedest", "newbalancedest", "isfraud", "isflaggedfraud"]
+            for col in old_columns:
+                try:
+                    await conn.execute(text(f"ALTER TABLE transactions DROP COLUMN IF EXISTS {col} CASCADE"))
+                except Exception:
+                    pass
         else:
             # SQLite workaround
             for col in columns_to_add:
