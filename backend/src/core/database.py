@@ -39,6 +39,27 @@ async def init_db() -> None:
     """
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        
+        # Auto-migrate new columns for Render deployment without requiring Alembic
+        from sqlalchemy import text
+        columns_to_add = [
+            "payment_type VARCHAR(50) DEFAULT 'p2m'",
+            "amount FLOAT DEFAULT 0",
+            "merchant_category VARCHAR(100) DEFAULT 'unknown'",
+            "merchant_id VARCHAR(100) DEFAULT 'unknown'",
+            "location_city VARCHAR(100) DEFAULT 'unknown'",
+            "location_lat FLOAT DEFAULT 0",
+            "location_lng FLOAT DEFAULT 0",
+            "device_type VARCHAR(50) DEFAULT 'unknown'",
+            "ip_address VARCHAR(50) DEFAULT 'unknown'",
+            "os_type VARCHAR(50) DEFAULT 'unknown'",
+            "bank_name VARCHAR(100) DEFAULT 'unknown'"
+        ]
+        for col in columns_to_add:
+            try:
+                await conn.execute(text(f"ALTER TABLE transactions ADD COLUMN {col}"))
+            except Exception:
+                pass  # Column already exists or SQLite doesn't support this ALTER syntax
 
 
 async def get_db() -> AsyncSession:
