@@ -14,6 +14,7 @@ from typing import Any, Optional
 
 
 from sqlalchemy import func, select
+from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.config import get_settings
@@ -290,6 +291,9 @@ class TransactionService:
             }),
         )
         self.db.add(log)
+        
+        # Commit the transaction to save all records
+        await self.db.commit()
 
         return {
             "transaction_id": tx_id,
@@ -325,6 +329,7 @@ class TransactionService:
         # Fetch transactions with predictions
         result = await self.db.execute(
             select(Transaction)
+            .options(selectinload(Transaction.prediction))
             .where(Transaction.user_id == user_id)
             .order_by(Transaction.timestamp.desc())
             .offset(offset)
@@ -337,10 +342,12 @@ class TransactionService:
             tx_dict = {
                 "id": tx.id,
                 "transaction_id": tx.transaction_id,
-                "type": tx.payment_type,
+                "payment_type": tx.payment_type,
                 "amount": tx.amount,
-                "nameOrig": "Self",
-                "nameDest": f"{tx.bank_name} ({tx.merchant_id})",
+                "merchant_category": tx.merchant_category,
+                "merchant_id": tx.merchant_id,
+                "bank_name": tx.bank_name,
+                "location_city": tx.location_city,
                 "status": tx.status,
                 "timestamp": tx.timestamp,
                 "risk_score": tx.prediction.risk_score if tx.prediction else None,

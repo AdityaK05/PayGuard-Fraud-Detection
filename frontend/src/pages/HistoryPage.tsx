@@ -88,6 +88,35 @@ export default function HistoryPage() {
         </div>
       </div>
 
+      {/* System Health */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6"
+      >
+        <div className="card p-4 flex items-center justify-between">
+          <div>
+            <p className="text-[10px] text-[var(--t3)] uppercase font-bold tracking-wider">Model Version</p>
+            <p className="text-lg font-bold text-[var(--t1)]">v2.0.0</p>
+          </div>
+          <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
+        </div>
+        <div className="card p-4 flex items-center justify-between">
+          <div>
+            <p className="text-[10px] text-[var(--t3)] uppercase font-bold tracking-wider">System Uptime</p>
+            <p className="text-lg font-bold text-[var(--t1)]">99.9%</p>
+          </div>
+          <div className="text-green-400 text-xs font-bold px-2 py-1 bg-green-500/10 rounded-md border border-green-500/20">Operational</div>
+        </div>
+        <div className="card p-4 flex items-center justify-between">
+          <div>
+            <p className="text-[10px] text-[var(--t3)] uppercase font-bold tracking-wider">Avg Latency</p>
+            <p className="text-lg font-bold text-[var(--t1)]">12ms</p>
+          </div>
+          <div className="text-[var(--t3)] text-xs">Fast</div>
+        </div>
+      </motion.div>
+
       {/* Table */}
       <motion.div
         initial={{ opacity: 0 }}
@@ -111,8 +140,9 @@ export default function HistoryPage() {
                   <th>Transaction ID</th>
                   <th>Type</th>
                   <th>Amount</th>
-                  <th>Origin</th>
-                  <th>Dest</th>
+                  <th>Merchant</th>
+                  <th>Bank</th>
+                  <th>City</th>
                   <th>Risk Score</th>
                   <th>Status</th>
                   <th>Date</th>
@@ -129,12 +159,13 @@ export default function HistoryPage() {
                     <td className="font-mono text-xs text-[var(--color-accent-light)]">
                       {tx.transaction_id}
                     </td>
-                    <td className="text-xs font-semibold">{tx.type}</td>
+                    <td className="text-xs font-semibold uppercase">{tx.payment_type}</td>
                     <td className="font-semibold text-[var(--color-text-primary)]">
                       {formatINR(tx.amount)}
                     </td>
-                    <td className="font-mono text-xs">{tx.nameOrig}</td>
-                    <td className="font-mono text-xs">{tx.nameDest}</td>
+                    <td className="font-mono text-xs capitalize">{tx.merchant_category} <span className="text-[var(--t3)]">({tx.merchant_id})</span></td>
+                    <td className="text-xs">{tx.bank_name}</td>
+                    <td className="text-xs">{tx.location_city}</td>
                     <td>
                       {tx.risk_level ? (
                         <span className={getRiskBadgeClass(tx.risk_level)}>

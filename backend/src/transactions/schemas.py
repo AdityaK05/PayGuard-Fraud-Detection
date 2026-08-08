@@ -50,6 +50,7 @@ class TransactionResponse(BaseModel):
     amount: float
     merchant_category: str
     merchant_id: str
+    bank_name: str
     location_city: str
     status: str
     timestamp: datetime

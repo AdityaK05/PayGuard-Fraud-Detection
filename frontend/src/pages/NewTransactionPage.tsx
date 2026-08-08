@@ -219,15 +219,22 @@ export default function NewTransactionPage() {
                 </div>
                 
                 <RiskGauge 
-                  score={result.prediction === "approved" ? Math.round((1 - result.fraud_probability) * 100) : Math.round(result.fraud_probability * 100)} 
+                  score={result.risk_score} 
                   size={220} 
-                  label="Confidence" 
+                  label="Risk Score" 
                 />
                 
-                <div className="mt-6 text-center space-y-1">
-                  <p className="text-[10px] text-[var(--t3)] uppercase tracking-wider font-bold">Risk Score</p>
-                  <p className="text-2xl font-bold text-[var(--t1)]">{result.risk_score} <span className="text-xs font-normal text-[var(--t3)]">/ 100</span></p>
-                </div>
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="mt-6 text-center space-y-1"
+                >
+                  <p className="text-[10px] text-[var(--t3)] uppercase tracking-wider font-bold">Confidence</p>
+                  <p className="text-2xl font-bold text-[var(--t1)]">
+                    {result.prediction === "approved" ? Math.round((1 - result.fraud_probability) * 100) : Math.round(result.fraud_probability * 100)}%
+                  </p>
+                </motion.div>
               </motion.div>
             </AnimatePresence>
           ) : (

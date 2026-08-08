@@ -172,7 +172,10 @@ These are the files you'll reference when explaining how ML integrates with the 
 ```bash
 cd backend
 python -m venv .venv
-# activate venv...
+# On Windows:    
+.venv\Scripts\activate
+# On macOS/Linux:
+# source .venv/bin/activate
 pip install -r requirements.txt
 python -m uvicorn src.main:app --reload --port 8000
 ```
