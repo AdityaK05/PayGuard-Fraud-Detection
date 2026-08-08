@@ -11,10 +11,12 @@ import { formatINR, formatDate, getRiskBadgeClass } from "@/lib/utils"
 interface Transaction {
   id: number
   transaction_id: string
-  type: string
+  payment_type: string
   amount: number
-  nameOrig: string
-  nameDest: string
+  merchant_category: string
+  merchant_id: string
+  bank_name: string
+  location_city: string
   status: string
   timestamp: string
   risk_score: number | null
@@ -48,8 +50,9 @@ export default function HistoryPage() {
     ? transactions.filter(
         (t) =>
           t.transaction_id.toLowerCase().includes(search.toLowerCase()) ||
-          t.nameOrig.toLowerCase().includes(search.toLowerCase()) ||
-          t.nameDest.toLowerCase().includes(search.toLowerCase())
+          t.merchant_category.toLowerCase().includes(search.toLowerCase()) ||
+          t.merchant_id.toLowerCase().includes(search.toLowerCase()) ||
+          t.bank_name.toLowerCase().includes(search.toLowerCase())
       )
     : transactions
 
