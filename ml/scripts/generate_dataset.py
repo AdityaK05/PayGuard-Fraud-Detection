@@ -91,16 +91,17 @@ def _generate_legitimate_transaction(
 ) -> dict:
     """Create a single legitimate transaction with realistic distributions."""
     city_name, lat, lng = random.choice(CITIES)
-    # Legitimate amounts follow a log-normal distribution (most are small)
+    
+    # Allow amounts up to 1L (100,000) for real-world UPI cap
     amount = round(np.random.lognormal(mean=5.5, sigma=1.2), 2)
-    amount = min(amount, 50_000.0)  # UPI cap
+    amount = min(amount, 100_000.0) 
 
-    # Allow some legitimate transactions late at night (5%) to prevent overfitting
-    if random.random() < 0.95:
-        hour = int(np.random.normal(loc=14, scale=3))
-        hour = max(5, min(hour, 22))
+    # Legitimate transactions happen at all hours, with a slight peak during the day
+    if random.random() < 0.20:
+        hour = random.randint(0, 23)  # 20% completely random time (including late night)
     else:
-        hour = random.choice([0, 1, 2, 3, 4, 23])
+        hour = int(np.random.normal(loc=14, scale=4))
+        hour = max(0, min(hour, 23))
         
     timestamp = base_time + timedelta(
         days=random.randint(0, 89),
@@ -108,6 +109,10 @@ def _generate_legitimate_transaction(
         minutes=random.randint(0, 59),
         seconds=random.randint(0, 59),
     )
+    
+    # 95% chance of normal device, 5% chance they use an unusual device (web/feature phone)
+    device_choices = DEVICE_TYPES[:2] if random.random() < 0.95 else DEVICE_TYPES
+    os_choices = OS_TYPES[:4] if random.random() < 0.95 else OS_TYPES
 
     return {
         "transaction_id": f"TXN{tx_id:06d}",
@@ -121,9 +126,9 @@ def _generate_legitimate_transaction(
         "location_lng": round(lng + np.random.normal(0, 0.01), 6),
         "timestamp": timestamp,
         "payment_type": random.choice(PAYMENT_TYPES),
-        "device_type": random.choice(DEVICE_TYPES[:2]),  # mostly mobile
+        "device_type": random.choice(device_choices),
         "ip_address": _generate_ip(),
-        "os_type": random.choice(OS_TYPES[:4]),  # mostly mobile OS
+        "os_type": random.choice(os_choices),
         "bank_name": random.choice(BANK_NAMES),
         "is_fraud": 0,
     }
@@ -136,30 +141,26 @@ def _generate_fraudulent_transaction(
 ) -> dict:
     """
     Create a fraudulent transaction by injecting anomalous patterns:
-      - Unusually high amounts
-      - Late-night timestamps
-      - Location far from usual
-      - Unusual device / OS combinations
-      - High-risk merchant categories
+      - Occurs at ANY time of day (to prevent time-overfitting)
+      - Variable high amounts
+      - Device/OS mismatch (simulating account takeover)
+      - Location mismatch (simulating remote fraudster)
+      - High-risk merchants
     """
-    # Pick a random city but offset location significantly (location mismatch)
     city_name, lat, lng = random.choice(CITIES)
     lat_offset = np.random.uniform(2.0, 5.0) * random.choice([-1, 1])
     lng_offset = np.random.uniform(2.0, 5.0) * random.choice([-1, 1])
 
-    # 40% of fraud happens during the day but with exceptionally high amounts
-    if random.random() < 0.4:
-        hour = int(np.random.normal(loc=14, scale=3))
-        hour = max(5, min(hour, 22))
-        amount = round(np.random.lognormal(mean=10.0, sigma=1.0), 2) # VERY high amount
+    # Fraud happens uniformly at ANY hour. The model MUST NOT rely purely on time.
+    hour = random.randint(0, 23)
+    
+    # 70% of fraud involves high amounts, 30% involves small test amounts
+    if random.random() < 0.70:
+        amount = round(np.random.lognormal(mean=9.0, sigma=1.2), 2)
+        amount = min(amount, 5_000_000.0) # Massive outliers
     else:
-        # 60% happens late night with moderately high amounts
-        hour = random.choice([0, 1, 2, 3, 4, 23])
-        amount = round(np.random.lognormal(mean=8.0, sigma=1.0), 2)
+        amount = round(np.random.uniform(1.0, 50.0), 2) # Pinging with small amounts
         
-    # Remove the hard UPI cap for fraud so the model learns to identify massive outliers
-    amount = min(amount, 5_000_000.0)
-
     timestamp = base_time + timedelta(
         days=random.randint(0, 89),
         hours=hour,
@@ -167,21 +168,26 @@ def _generate_fraudulent_transaction(
         seconds=random.randint(0, 59),
     )
 
+    # Fraudsters often use web interfaces, emulators, or feature phones (account takeover)
+    # But 40% of the time they use normal devices to blend in
+    device_choices = DEVICE_TYPES[2:] if random.random() < 0.60 else DEVICE_TYPES[:2]
+    os_choices = OS_TYPES[4:] if random.random() < 0.60 else OS_TYPES[:4]
+
     return {
         "transaction_id": f"TXN{tx_id:06d}",
         "user_id": f"USR{user_idx:04d}",
         "upi_id": _generate_upi_id(user_idx),
         "amount": amount,
-        "merchant_category": random.choice(["jewellery", "real_estate", "gaming", "electronics"]),
+        "merchant_category": random.choice(["jewellery", "real_estate", "gaming", "electronics", "charity"]),
         "merchant_id": _generate_merchant_id(),
         "location_city": city_name,
         "location_lat": round(lat + lat_offset, 6),
         "location_lng": round(lng + lng_offset, 6),
         "timestamp": timestamp,
         "payment_type": random.choice(PAYMENT_TYPES),
-        "device_type": random.choice(DEVICE_TYPES[2:]),  # unusual: web / feature phone
+        "device_type": random.choice(device_choices),
         "ip_address": _generate_ip(),
-        "os_type": random.choice(OS_TYPES[4:]),  # unusual: desktop OS
+        "os_type": random.choice(os_choices),
         "bank_name": random.choice(BANK_NAMES),
         "is_fraud": 1,
     }
