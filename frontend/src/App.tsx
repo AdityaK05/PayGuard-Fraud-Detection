@@ -7,8 +7,6 @@ import { AuthProvider } from "./context/AuthContext"
 import { ThemeProvider } from "./context/ThemeContext"
 import AppLayout from "./components/layout/AppLayout"
 
-// Pages
-import LandingPage from "./pages/LandingPage"
 import LoginPage from "@/pages/LoginPage"
 import SignupPage from "@/pages/SignupPage"
 import DashboardPage from "@/pages/DashboardPage"
