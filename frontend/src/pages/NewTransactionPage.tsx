@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Loader2, Fingerprint, Crosshair, AlertTriangle } from "lucide-react"
+import { Fingerprint, Crosshair, AlertTriangle } from "lucide-react"
 import { TerminalPanel } from "@/components/ui/TerminalPanel"
 import { RiskBadge } from "@/components/ui/RiskBadge"
 import api from "@/lib/api"
@@ -12,6 +12,7 @@ interface PredictionResult {
   risk_level: "safe" | "medium" | "high" | "fraud"
   prediction: "approved" | "blocked"
   confidence: number
+  is_anomaly: boolean
   shap_explanation?: Record<string, number>
 }
 
