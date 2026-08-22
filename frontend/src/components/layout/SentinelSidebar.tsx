@@ -8,6 +8,7 @@ export default function SentinelSidebar() {
 
   const links = [
     { name: "COMMAND DECK", path: "/dashboard", icon: Activity },
+    { name: "MANUAL SCAN", path: "/scan", icon: Shield },
     { name: "TRANSACTIONS", path: "/history", icon: List },
     { name: "REVIEW QUEUE", path: "/review", icon: Kanban },
     { name: "SETTINGS", path: "/settings", icon: Settings },

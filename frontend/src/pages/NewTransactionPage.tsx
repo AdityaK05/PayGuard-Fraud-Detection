@@ -1,20 +1,18 @@
-/**
- * PayGuard – New Transaction Page
- */
-
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Loader2, ArrowRightLeft, ShieldCheck, AlertOctagon } from "lucide-react"
+import { Loader2, Fingerprint, Crosshair, AlertTriangle } from "lucide-react"
+import { TerminalPanel } from "@/components/ui/TerminalPanel"
+import { RiskBadge } from "@/components/ui/RiskBadge"
 import api from "@/lib/api"
-import RiskGauge from "@/components/ui/RiskGauge"
 
 interface PredictionResult {
   transaction_id: string
   fraud_probability: number
   risk_score: number
-  risk_level: "safe" | "medium" | "fraud"
+  risk_level: "safe" | "medium" | "high" | "fraud"
   prediction: "approved" | "blocked"
   confidence: number
+  shap_explanation?: Record<string, number>
 }
 
 export default function NewTransactionPage() {
@@ -41,12 +39,11 @@ export default function NewTransactionPage() {
     setError("")
     setResult(null)
 
-    // Generate a fake ISO string based on selected time
     const fakeDate = new Date()
     if (formData.time_of_day === "late_night") {
-      fakeDate.setUTCHours(2, 0, 0, 0) // 2 AM UTC
+      fakeDate.setUTCHours(2, 0, 0, 0)
     } else {
-      fakeDate.setUTCHours(14, 0, 0, 0) // 2 PM UTC
+      fakeDate.setUTCHours(14, 0, 0, 0)
     }
 
     try {
@@ -57,8 +54,8 @@ export default function NewTransactionPage() {
         merchant_id: formData.merchant_id,
         bank_name: formData.bank_name,
         location_city: formData.location_city,
-        location_lat: 19.076, // Mocked for simplicity
-        location_lng: 72.877, // Mocked for simplicity
+        location_lat: 19.076,
+        location_lng: 72.877,
         device_type: formData.device_type,
         os_type: formData.os_type,
         ip_address: formData.ip_address,
@@ -85,164 +82,181 @@ export default function NewTransactionPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto pb-12">
-      <motion.div 
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-8"
-      >
-        <h2 className="text-xl font-bold text-[var(--t1)] tracking-wide flex items-center gap-2">
-          <ArrowRightLeft className="w-5 h-5 text-[var(--t2)]" />
-          Fraud Simulator
-        </h2>
-        <p className="text-[var(--t3)] text-sm mt-1">
-          Test the ML Pipeline against custom UPI transaction parameters.
-        </p>
-      </motion.div>
+    <div className="max-w-[1400px] mx-auto flex flex-col gap-8">
+      <div className="flex items-center justify-between mb-2">
+        <h1 className="text-xl font-bold font-sans tracking-wide text-sentinel-text-bright">
+          MANUAL <span className="text-sentinel-green">SCAN</span>
+        </h1>
+        <div className="text-[10px] font-mono text-sentinel-text-muted">
+          PIPELINE: ISOLATION_FOREST &rarr; XGBOOST
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         {/* Left Side: Input Form */}
-        <motion.div
-          initial={{ opacity: 0, x: -10 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="lg:col-span-7 card p-6"
-        >
-          <form onSubmit={handleSubmit} className="space-y-6">
-            
+        <TerminalPanel className="lg:col-span-7 flex flex-col">
+          <div className="flex items-center gap-3 border-b border-sentinel-border/50 pb-4 mb-6">
+            <Fingerprint className="w-5 h-5 text-sentinel-green" />
+            <span className="font-mono text-[13px] tracking-[0.1em] text-sentinel-text-bright">INJECT TRANSACTION PAYLOAD</span>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6 flex-1 font-mono text-[11px]">
             <div className="grid grid-cols-3 gap-6">
-              <div className="space-y-1 col-span-3 sm:col-span-1">
-                <label className="text-[11px] text-[var(--t2)] uppercase font-bold tracking-wider">Payment Type</label>
-                <select name="payment_type" value={formData.payment_type} onChange={handleChange} className="input-field appearance-none">
-                  <option value="p2p">Peer to Peer (P2P)</option>
-                  <option value="p2m">Peer to Merchant (P2M)</option>
-                  <option value="bill_payment">Bill Payment</option>
+              <div className="space-y-2 col-span-3 sm:col-span-1">
+                <label className="text-[#3B5C48]">PAYMENT_TYPE</label>
+                <select name="payment_type" value={formData.payment_type} onChange={handleChange} className="w-full bg-[#030805] border border-sentinel-border p-2.5 text-sentinel-text-bright outline-none focus:border-sentinel-green appearance-none rounded-none">
+                  <option value="p2p">P2P</option>
+                  <option value="p2m">P2M</option>
+                  <option value="bill_payment">BILL_PAYMENT</option>
                 </select>
               </div>
-              <div className="space-y-1 col-span-3 sm:col-span-1">
-                <label className="text-[11px] text-[var(--t2)] uppercase font-bold tracking-wider">Amount (₹)</label>
-                <input required type="number" step="0.01" name="amount" value={formData.amount} onChange={handleChange} className="input-field" />
+              <div className="space-y-2 col-span-3 sm:col-span-1">
+                <label className="text-[#3B5C48]">AMOUNT (INR)</label>
+                <input required type="number" step="0.01" name="amount" value={formData.amount} onChange={handleChange} className="w-full bg-[#030805] border border-sentinel-border p-2.5 text-sentinel-text-bright outline-none focus:border-sentinel-green rounded-none" />
               </div>
-              <div className="space-y-1 col-span-3 sm:col-span-1">
-                <label className="text-[11px] text-[var(--t2)] uppercase font-bold tracking-wider">Time of Day</label>
-                <select name="time_of_day" value={formData.time_of_day} onChange={handleChange} className="input-field appearance-none">
-                  <option value="day">Daytime (2:00 PM)</option>
-                  <option value="late_night">Late Night (2:00 AM)</option>
+              <div className="space-y-2 col-span-3 sm:col-span-1">
+                <label className="text-[#3B5C48]">TIME_OF_DAY</label>
+                <select name="time_of_day" value={formData.time_of_day} onChange={handleChange} className="w-full bg-[#030805] border border-sentinel-border p-2.5 text-sentinel-text-bright outline-none focus:border-sentinel-green appearance-none rounded-none">
+                  <option value="day">DAY (14:00)</option>
+                  <option value="late_night">NIGHT (02:00)</option>
                 </select>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-5 rounded-xl border border-[var(--card-border)] bg-[rgba(255,255,255,0.02)]">
-              <div className="space-y-1 sm:col-span-2 pb-2 mb-2 border-b border-[var(--card-border)]">
-                <h4 className="text-[11px] font-bold text-[var(--t1)] uppercase tracking-widest">Merchant Details</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 border border-sentinel-border/50 bg-[#030805]">
+              <div className="space-y-2">
+                <label className="text-[#3B5C48]">MERCHANT_CAT</label>
+                <input required type="text" name="merchant_category" value={formData.merchant_category} onChange={handleChange} className="w-full bg-transparent border-b border-sentinel-border p-2 text-sentinel-text-bright outline-none focus:border-sentinel-green rounded-none" />
               </div>
-              <div className="space-y-1">
-                <label className="text-[10px] text-[var(--t3)] uppercase font-bold tracking-wider">Category</label>
-                <input required type="text" name="merchant_category" value={formData.merchant_category} onChange={handleChange} className="input-field" />
+              <div className="space-y-2">
+                <label className="text-[#3B5C48]">MERCHANT_ID</label>
+                <input required type="text" name="merchant_id" value={formData.merchant_id} onChange={handleChange} className="w-full bg-transparent border-b border-sentinel-border p-2 text-sentinel-text-bright outline-none focus:border-sentinel-green rounded-none" />
               </div>
-              <div className="space-y-1">
-                <label className="text-[10px] text-[var(--t3)] uppercase font-bold tracking-wider">Merchant ID</label>
-                <input required type="text" name="merchant_id" value={formData.merchant_id} onChange={handleChange} className="input-field" />
-              </div>
-              <div className="space-y-1 sm:col-span-2">
-                <label className="text-[10px] text-[var(--t3)] uppercase font-bold tracking-wider">Bank Name</label>
-                <input required type="text" name="bank_name" value={formData.bank_name} onChange={handleChange} className="input-field" />
+              <div className="space-y-2 sm:col-span-2">
+                <label className="text-[#3B5C48]">BANK_NAME</label>
+                <input required type="text" name="bank_name" value={formData.bank_name} onChange={handleChange} className="w-full bg-transparent border-b border-sentinel-border p-2 text-sentinel-text-bright outline-none focus:border-sentinel-green rounded-none" />
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-5 rounded-xl border border-[var(--card-border)] bg-[rgba(255,255,255,0.02)]">
-              <div className="space-y-1 sm:col-span-2 pb-2 mb-2 border-b border-[var(--card-border)]">
-                <h4 className="text-[11px] font-bold text-[var(--t1)] uppercase tracking-widest">Device & Location</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 border border-sentinel-border/50 bg-[#030805]">
+              <div className="space-y-2">
+                <label className="text-[#3B5C48]">CITY</label>
+                <input required type="text" name="location_city" value={formData.location_city} onChange={handleChange} className="w-full bg-transparent border-b border-sentinel-border p-2 text-sentinel-text-bright outline-none focus:border-sentinel-green rounded-none" />
               </div>
-              <div className="space-y-1">
-                <label className="text-[10px] text-[var(--t3)] uppercase font-bold tracking-wider">City</label>
-                <input required type="text" name="location_city" value={formData.location_city} onChange={handleChange} className="input-field" />
+              <div className="space-y-2">
+                <label className="text-[#3B5C48]">IP_ADDRESS</label>
+                <input required type="text" name="ip_address" value={formData.ip_address} onChange={handleChange} className="w-full bg-transparent border-b border-sentinel-border p-2 text-sentinel-text-bright outline-none focus:border-sentinel-green rounded-none" />
               </div>
-              <div className="space-y-1">
-                <label className="text-[10px] text-[var(--t3)] uppercase font-bold tracking-wider">IP Address</label>
-                <input required type="text" name="ip_address" value={formData.ip_address} onChange={handleChange} className="input-field" />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[10px] text-[var(--t3)] uppercase font-bold tracking-wider">Device</label>
-                <select name="device_type" value={formData.device_type} onChange={handleChange} className="input-field appearance-none">
-                  <option value="android">Android</option>
-                  <option value="ios">iOS</option>
-                  <option value="web">Web</option>
+              <div className="space-y-2">
+                <label className="text-[#3B5C48]">DEVICE</label>
+                <select name="device_type" value={formData.device_type} onChange={handleChange} className="w-full bg-transparent border-b border-sentinel-border p-2 text-sentinel-text-bright outline-none focus:border-sentinel-green appearance-none rounded-none">
+                  <option value="android">ANDROID</option>
+                  <option value="ios">IOS</option>
+                  <option value="web">WEB</option>
                 </select>
               </div>
-              <div className="space-y-1">
-                <label className="text-[10px] text-[var(--t3)] uppercase font-bold tracking-wider">OS Version</label>
-                <input required type="text" name="os_type" value={formData.os_type} onChange={handleChange} className="input-field" />
+              <div className="space-y-2">
+                <label className="text-[#3B5C48]">OS_VER</label>
+                <input required type="text" name="os_type" value={formData.os_type} onChange={handleChange} className="w-full bg-transparent border-b border-sentinel-border p-2 text-sentinel-text-bright outline-none focus:border-sentinel-green rounded-none" />
               </div>
             </div>
 
             {error && (
-              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="p-3 bg-red-900/20 border border-red-500/30 rounded-lg text-red-400 text-sm flex items-center gap-2">
-                <AlertOctagon className="w-4 h-4" />
+              <div className="p-3 bg-sentinel-red/10 border border-sentinel-red text-sentinel-red text-[11px] flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4" />
                 {error}
-              </motion.div>
+              </div>
             )}
 
-            <div className="pt-2">
-              <button type="submit" disabled={loading} className="btn-primary w-full py-3 text-[13px] font-bold">
-                {loading ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : "Run AI Prediction"}
+            <div className="pt-4">
+              <button type="submit" disabled={loading} className="w-full border border-sentinel-green text-sentinel-green hover:bg-sentinel-green hover:text-[#05130C] py-3 text-[12px] uppercase font-bold tracking-[0.1em] transition-colors disabled:opacity-50">
+                {loading ? "ANALYZING PAYLOAD..." : "EXECUTE SCAN"}
               </button>
             </div>
           </form>
-        </motion.div>
+        </TerminalPanel>
 
         {/* Right Side: Prediction Result */}
-        <motion.div
-          initial={{ opacity: 0, x: 10 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="lg:col-span-5 card p-8 flex flex-col items-center justify-center relative min-h-[400px]"
-        >
+        <TerminalPanel danger={result?.prediction === "blocked"} className="lg:col-span-5 flex flex-col relative min-h-[500px]">
+          <div className="flex items-center gap-3 border-b border-sentinel-border/50 pb-4 mb-6">
+            <Crosshair className={`w-5 h-5 ${result?.prediction === "blocked" ? "text-sentinel-red" : "text-sentinel-green"}`} />
+            <span className="font-mono text-[13px] tracking-[0.1em] text-sentinel-text-bright">ML TELEMETRY</span>
+          </div>
+
           {loading ? (
-            <div className="flex flex-col items-center text-[var(--t3)]">
-              <Loader2 className="w-10 h-10 animate-spin mb-4 text-[var(--t1)]" />
-              <p className="animate-pulse tracking-widest uppercase text-[10px] font-bold">Analyzing Transaction...</p>
+            <div className="flex-1 flex items-center justify-center text-sentinel-green font-mono text-[11px] animate-pulse">
+              [RUNNING ISOLATION FOREST & XGBOOST...]
             </div>
           ) : result ? (
             <AnimatePresence>
-              <motion.div
-                initial={{ scale: 0.95, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="flex flex-col items-center w-full"
-              >
-                <div className={`flex items-center gap-2 px-5 py-2 rounded-full border text-xs font-bold mb-8 uppercase tracking-widest ${
-                  result.prediction === "approved" 
-                    ? "bg-green-500/10 border-green-500/30 text-green-400" 
-                    : "bg-red-500/10 border-red-500/30 text-red-400"
-                }`}>
-                  {result.prediction === "approved" ? <ShieldCheck className="w-4 h-4" /> : <AlertOctagon className="w-4 h-4" />}
-                  {result.prediction === "approved" ? "Safe Transaction" : "Fraud Detected"}
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col flex-1">
+                
+                <div className="flex justify-between items-start mb-8">
+                  <div>
+                    <div className="text-[10px] font-mono text-sentinel-text-muted mb-1">RISK INDEX</div>
+                    <div className={`text-4xl font-mono ${result.risk_score > 50 ? "text-sentinel-red" : "text-sentinel-green"}`}>
+                      {result.risk_score}%
+                    </div>
+                  </div>
+                  <RiskBadge level={result.prediction === "blocked" ? "block" : "safe"} />
                 </div>
-                
-                <RiskGauge 
-                  score={result.risk_score} 
-                  size={220} 
-                  label="Risk Score" 
-                />
-                
-                <motion.div 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="mt-6 text-center space-y-1"
-                >
-                  <p className="text-[10px] text-[var(--t3)] uppercase tracking-wider font-bold">Confidence</p>
-                  <p className="text-2xl font-bold text-[var(--t1)]">
-                    {result.prediction === "approved" ? Math.round((1 - result.fraud_probability) * 100) : Math.round(result.fraud_probability * 100)}%
-                  </p>
-                </motion.div>
+
+                <div className="space-y-4 font-mono text-[11px] mb-8">
+                  <div className="flex justify-between border-b border-sentinel-border/50 pb-1">
+                    <span className="text-[#3B5C48]">FRAUD PROBABILITY</span>
+                    <span className="text-sentinel-text-bright">{(result.fraud_probability * 100).toFixed(1)}%</span>
+                  </div>
+                  <div className="flex justify-between border-b border-sentinel-border/50 pb-1">
+                    <span className="text-[#3B5C48]">MODEL CONFIDENCE</span>
+                    <span className="text-sentinel-text-bright">{(result.confidence * 100).toFixed(1)}%</span>
+                  </div>
+                  <div className="flex justify-between border-b border-sentinel-border/50 pb-1">
+                    <span className="text-[#3B5C48]">ANOMALY DETECTED</span>
+                    <span className={result.is_anomaly ? "text-sentinel-red" : "text-sentinel-green"}>
+                      {result.is_anomaly ? "TRUE" : "FALSE"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* SHAP Explanations */}
+                {result.shap_explanation && (
+                  <div className="mt-auto border border-sentinel-border/50 p-4 bg-[#030805]">
+                    <h4 className="text-[10px] text-sentinel-text-muted tracking-[0.1em] mb-4 uppercase">SHAP Feature Importance (Explainability)</h4>
+                    <div className="space-y-3 font-mono text-[10px]">
+                      {Object.entries(result.shap_explanation)
+                        .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))
+                        .slice(0, 5)
+                        .map(([feature, impact], i) => (
+                          <div key={i} className="flex flex-col gap-1">
+                            <div className="flex justify-between text-[#3B5C48]">
+                              <span>{feature.toUpperCase()}</span>
+                              <span className={impact > 0 ? "text-sentinel-red" : "text-sentinel-green"}>
+                                {impact > 0 ? "+" : ""}{impact.toFixed(3)}
+                              </span>
+                            </div>
+                            <div className="h-1.5 w-full bg-[#050C08] rounded-full overflow-hidden flex">
+                               {/* Render bar originating from center */}
+                               <div className="w-1/2 flex justify-end">
+                                 {impact < 0 && <div className="h-full bg-sentinel-green" style={{ width: `${Math.min(100, Math.abs(impact) * 30)}%` }} />}
+                               </div>
+                               <div className="w-1/2 flex justify-start">
+                                 {impact > 0 && <div className="h-full bg-sentinel-red" style={{ width: `${Math.min(100, impact * 30)}%` }} />}
+                               </div>
+                            </div>
+                          </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </motion.div>
             </AnimatePresence>
           ) : (
-             <div className="flex flex-col items-center opacity-30">
-               <RiskGauge score={0} size={220} label="Awaiting Input" />
-             </div>
+            <div className="flex-1 flex items-center justify-center text-sentinel-text-muted font-mono text-[11px] opacity-50">
+              [SYSTEM IDLE — AWAITING PAYLOAD]
+            </div>
           )}
-        </motion.div>
+        </TerminalPanel>
       </div>
     </div>
   )
