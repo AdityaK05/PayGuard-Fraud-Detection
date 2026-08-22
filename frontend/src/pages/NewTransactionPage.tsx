@@ -107,9 +107,9 @@ export default function NewTransactionPage() {
               <div className="space-y-2 col-span-3 sm:col-span-1">
                 <label className="text-[#3B5C48]">PAYMENT_TYPE</label>
                 <select name="payment_type" value={formData.payment_type} onChange={handleChange} className="w-full bg-[#030805] border border-sentinel-border p-2.5 text-sentinel-text-bright outline-none focus:border-sentinel-green appearance-none rounded-none">
-                  <option value="p2p">P2P</option>
-                  <option value="p2m">P2M</option>
-                  <option value="bill_payment">BILL_PAYMENT</option>
+                  <option value="p2p" className="bg-[#030805]">P2P</option>
+                  <option value="p2m" className="bg-[#030805]">P2M</option>
+                  <option value="bill_payment" className="bg-[#030805]">BILL_PAYMENT</option>
                 </select>
               </div>
               <div className="space-y-2 col-span-3 sm:col-span-1">
@@ -119,8 +119,8 @@ export default function NewTransactionPage() {
               <div className="space-y-2 col-span-3 sm:col-span-1">
                 <label className="text-[#3B5C48]">TIME_OF_DAY</label>
                 <select name="time_of_day" value={formData.time_of_day} onChange={handleChange} className="w-full bg-[#030805] border border-sentinel-border p-2.5 text-sentinel-text-bright outline-none focus:border-sentinel-green appearance-none rounded-none">
-                  <option value="day">DAY (14:00)</option>
-                  <option value="late_night">NIGHT (02:00)</option>
+                  <option value="day" className="bg-[#030805]">DAY (14:00)</option>
+                  <option value="late_night" className="bg-[#030805]">NIGHT (02:00)</option>
                 </select>
               </div>
             </div>
@@ -152,9 +152,9 @@ export default function NewTransactionPage() {
               <div className="space-y-2">
                 <label className="text-[#3B5C48]">DEVICE</label>
                 <select name="device_type" value={formData.device_type} onChange={handleChange} className="w-full bg-transparent border-b border-sentinel-border p-2 text-sentinel-text-bright outline-none focus:border-sentinel-green appearance-none rounded-none">
-                  <option value="android">ANDROID</option>
-                  <option value="ios">IOS</option>
-                  <option value="web">WEB</option>
+                  <option value="android" className="bg-[#030805]">ANDROID</option>
+                  <option value="ios" className="bg-[#030805]">IOS</option>
+                  <option value="web" className="bg-[#030805]">WEB</option>
                 </select>
               </div>
               <div className="space-y-2">
