@@ -15,22 +15,26 @@ from src.core.config import get_settings
 
 settings = get_settings()
 
+import bcrypt
+
 # ── Password Hashing ────────────────────────────────────────────────
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 
 def hash_password(password: str) -> str:
     """Hash a plaintext password using bcrypt."""
     # bcrypt limits passwords to 72 bytes
-    password = password[:72]
-    return pwd_context.hash(password)
-
+    password_bytes = password[:72].encode('utf-8')
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(password_bytes, salt)
+    return hashed.decode('utf-8')
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a plaintext password against a bcrypt hash."""
-    plain_password = plain_password[:72]
-    return pwd_context.verify(plain_password, hashed_password)
+    password_bytes = plain_password[:72].encode('utf-8')
+    hash_bytes = hashed_password.encode('utf-8')
+    try:
+        return bcrypt.checkpw(password_bytes, hash_bytes)
+    except ValueError:
+        return False
 
 
 # ── JWT Tokens ──────────────────────────────────────────────────────

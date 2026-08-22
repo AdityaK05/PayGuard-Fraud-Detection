@@ -1,12 +1,9 @@
-/**
- * PayGuard – Transaction History Page
- */
-
 import { useState, useEffect } from "react"
-import { motion } from "framer-motion"
-import { History, Download, Search } from "lucide-react"
+import { Search } from "lucide-react"
+import { TerminalPanel } from "@/components/ui/TerminalPanel"
+import { RiskBadge } from "@/components/ui/RiskBadge"
+import { TerminalButton } from "@/components/ui/TerminalButton"
 import api from "@/lib/api"
-import { formatINR, formatDate, getRiskBadgeClass } from "@/lib/utils"
 
 interface Transaction {
   id: number
@@ -57,175 +54,103 @@ export default function HistoryPage() {
     : transactions
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-[var(--color-accent-muted)] flex items-center justify-center">
-            <History className="w-5 h-5 text-[var(--color-accent)]" />
-          </div>
-          <div>
-            <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
-              Transaction History
-            </h3>
-            <p className="text-xs text-[var(--color-text-muted)]">
-              {total} total transactions
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)]" />
-            <input
-              type="text"
-              placeholder="Search..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="input-field pl-10 w-48"
-            />
-          </div>
-          <button className="btn-secondary text-xs">
-            <Download className="w-4 h-4" />
-            Export
-          </button>
+    <div className="max-w-[1400px] mx-auto flex flex-col gap-8">
+      <div className="flex items-center justify-between mb-2">
+        <h1 className="text-xl font-bold font-sans tracking-wide text-sentinel-text-bright">
+          TRANSACTION <span className="text-sentinel-green">LEDGER</span>
+        </h1>
+        <div className="text-[10px] font-mono text-sentinel-text-muted">
+          TOTAL RECORDS: {total.toLocaleString()}
         </div>
       </div>
 
-      {/* System Health */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6"
-      >
-        <div className="card p-4 flex items-center justify-between">
-          <div>
-            <p className="text-[10px] text-[var(--t3)] uppercase font-bold tracking-wider">Model Version</p>
-            <p className="text-lg font-bold text-[var(--t1)]">v2.0.0</p>
+      <TerminalPanel className="flex flex-col flex-1 p-6">
+        <div className="flex justify-between items-center mb-6">
+          <div className="relative w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-sentinel-green" />
+            <input
+              type="text"
+              placeholder="QUERY BY ID / MERCHANT..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full bg-[#030805] border border-sentinel-border p-2 pl-10 text-sentinel-text-bright font-mono text-[11px] outline-none transition-all placeholder:text-[#2C4536] focus:border-sentinel-green"
+            />
           </div>
-          <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
         </div>
-        <div className="card p-4 flex items-center justify-between">
-          <div>
-            <p className="text-[10px] text-[var(--t3)] uppercase font-bold tracking-wider">System Uptime</p>
-            <p className="text-lg font-bold text-[var(--t1)]">99.9%</p>
-          </div>
-          <div className="text-green-400 text-xs font-bold px-2 py-1 bg-green-500/10 rounded-md border border-green-500/20">Operational</div>
-        </div>
-        <div className="card p-4 flex items-center justify-between">
-          <div>
-            <p className="text-[10px] text-[var(--t3)] uppercase font-bold tracking-wider">Avg Latency</p>
-            <p className="text-lg font-bold text-[var(--t1)]">12ms</p>
-          </div>
-          <div className="text-[var(--t3)] text-xs">Fast</div>
-        </div>
-      </motion.div>
 
-      {/* Table */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="glass-card overflow-hidden"
-      >
         {loading ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="w-8 h-8 border-3 border-[var(--color-accent)] border-t-transparent rounded-full animate-spin" />
+          <div className="h-64 flex items-center justify-center text-sentinel-green font-mono text-[11px] animate-pulse">
+            [FETCHING LEDGER DATA...]
           </div>
         ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-64 text-[var(--color-text-muted)]">
-            <History className="w-10 h-10 mb-3 opacity-30" />
-            <p className="text-sm">No transactions found</p>
+          <div className="h-64 flex items-center justify-center text-sentinel-text-muted font-mono text-[11px]">
+            [NO MATCHING RECORDS FOUND]
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="data-table">
+            <table className="w-full text-left font-mono">
               <thead>
-                <tr>
-                  <th>Transaction ID</th>
-                  <th>Type</th>
-                  <th>Amount</th>
-                  <th>Merchant</th>
-                  <th>Bank</th>
-                  <th>City</th>
-                  <th>Risk Score</th>
-                  <th>Status</th>
-                  <th>Date</th>
+                <tr className="border-b border-sentinel-border/50 text-[10px] tracking-[0.1em] text-sentinel-text-muted uppercase">
+                  <th className="pb-3 px-4 font-normal">TX_ID</th>
+                  <th className="pb-3 px-4 font-normal">MERCHANT</th>
+                  <th className="pb-3 px-4 font-normal">TYPE</th>
+                  <th className="pb-3 px-4 font-normal text-right">AMOUNT</th>
+                  <th className="pb-3 px-4 font-normal text-center">RISK</th>
+                  <th className="pb-3 px-4 font-normal">STATUS</th>
+                  <th className="pb-3 px-4 font-normal">TIME</th>
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((tx, i) => (
-                  <motion.tr
-                    key={tx.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.03 }}
-                  >
-                    <td className="font-mono text-xs text-[var(--color-accent-light)]">
-                      {tx.transaction_id}
-                    </td>
-                    <td className="text-xs font-semibold uppercase">{tx.payment_type}</td>
-                    <td className="font-semibold text-[var(--color-text-primary)]">
-                      {formatINR(tx.amount)}
-                    </td>
-                    <td className="font-mono text-xs capitalize">{tx.merchant_category} <span className="text-[var(--t3)]">({tx.merchant_id})</span></td>
-                    <td className="text-xs">{tx.bank_name}</td>
-                    <td className="text-xs">{tx.location_city}</td>
-                    <td>
+                {filtered.map((tx) => (
+                  <tr key={tx.id} className="border-b border-sentinel-border/30 text-[11px] hover:bg-sentinel-border/10 transition-colors">
+                    <td className="py-3 px-4 text-sentinel-green">{tx.transaction_id.slice(0, 16)}...</td>
+                    <td className="py-3 px-4 uppercase text-sentinel-text-bright">{tx.merchant_category} <span className="text-sentinel-text-muted">({tx.merchant_id.slice(0, 4)})</span></td>
+                    <td className="py-3 px-4 text-sentinel-text-muted">{tx.payment_type}</td>
+                    <td className="py-3 px-4 text-right font-sans font-bold">₹{tx.amount.toLocaleString()}</td>
+                    <td className="py-3 px-4 text-center">
                       {tx.risk_level ? (
-                        <span className={getRiskBadgeClass(tx.risk_level)}>
-                          {tx.risk_score}
-                        </span>
+                         <span className={tx.risk_level === 'high' ? 'text-sentinel-red' : tx.risk_level === 'medium' ? 'text-sentinel-amber' : 'text-sentinel-green'}>
+                           {tx.risk_score}
+                         </span>
                       ) : (
-                        <span className="text-xs text-[var(--color-text-muted)]">—</span>
+                         <span className="text-sentinel-text-muted">—</span>
                       )}
                     </td>
-                    <td>
-                      <span
-                        className={`text-xs font-semibold capitalize ${
-                          tx.status === "approved"
-                            ? "text-[var(--color-success)]"
-                            : tx.status === "blocked"
-                            ? "text-[var(--color-danger)]"
-                            : "text-[var(--color-warning)]"
-                        }`}
-                      >
-                        {tx.status}
-                      </span>
+                    <td className="py-3 px-4">
+                      <RiskBadge level={tx.status === "blocked" ? "block" : tx.status === "approved" ? "safe" : "review"} />
                     </td>
-                    <td className="text-xs whitespace-nowrap">
-                      {formatDate(tx.timestamp)}
-                    </td>
-                  </motion.tr>
+                    <td className="py-3 px-4 text-sentinel-text-muted">{new Date(tx.timestamp).toLocaleString()}</td>
+                  </tr>
                 ))}
               </tbody>
             </table>
           </div>
         )}
 
-        {/* Pagination */}
         {total > 15 && (
-          <div className="flex items-center justify-between p-4 border-t border-[var(--color-border)]">
-            <p className="text-xs text-[var(--color-text-muted)]">
-              Page {page} of {Math.ceil(total / 15)}
-            </p>
-            <div className="flex gap-2">
+          <div className="flex items-center justify-between mt-6 font-mono">
+            <div className="text-[10px] text-sentinel-text-muted">
+              PAGE {page} OF {Math.ceil(total / 15)}
+            </div>
+            <div className="flex gap-4">
               <button
                 onClick={() => setPage(Math.max(1, page - 1))}
                 disabled={page === 1}
-                className="btn-secondary text-xs disabled:opacity-30"
+                className="text-[11px] text-sentinel-green hover:text-white disabled:opacity-30 disabled:hover:text-sentinel-green uppercase transition-colors"
               >
-                Previous
+                &lt; PREV
               </button>
               <button
                 onClick={() => setPage(page + 1)}
                 disabled={page >= Math.ceil(total / 15)}
-                className="btn-secondary text-xs disabled:opacity-30"
+                className="text-[11px] text-sentinel-green hover:text-white disabled:opacity-30 disabled:hover:text-sentinel-green uppercase transition-colors"
               >
-                Next
+                NEXT &gt;
               </button>
             </div>
           </div>
         )}
-      </motion.div>
+      </TerminalPanel>
     </div>
   )
 }

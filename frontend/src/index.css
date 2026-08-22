@@ -1,142 +1,75 @@
 @import "tailwindcss";
 @plugin "tailwindcss-animate";
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap");
 
-@layer base {
-  :root, .dark {
-    color-scheme: dark;
-    --page-bg: #080808;
-    --sidebar-bg: #0c0c0c;
-    --card-bg: #111111;
-    --card-border: #222222;
-    --card-border-hover: #333333;
-    
-    --t1: #ffffff;
-    --t2: #a1a1aa;
-    --t3: #71717a;
-    
-    --nav-active: #1a1a1a;
-    --nav-hover: #141414;
-    
-    --accent: #ffffff;
-    --accent-dim: rgba(255, 255, 255, 0.15);
+@theme {
+  --color-sentinel-base: #060706;
+  --color-sentinel-green: #00FF96;
+  --color-sentinel-green-dim: rgba(0, 255, 150, 0.02);
+  --color-sentinel-green-dimmer: rgba(0, 255, 150, 0.015);
+  --color-sentinel-border: rgba(0, 255, 150, 0.15);
+  --color-sentinel-border-focus: rgba(0, 255, 150, 0.25);
+  --color-sentinel-amber: #FFC15C;
+  --color-sentinel-red: #FF5C5C;
+  --color-sentinel-text: #C8FFDA;
+  --color-sentinel-text-muted: #4A9E6E;
+  --color-sentinel-text-bright: #E8FFF0;
+
+  --font-mono: "JetBrains Mono", monospace;
+  --font-sans: "Space Grotesk", sans-serif;
+
+  --animate-radar-sweep: rotate 3.2s linear infinite;
+  --animate-blip-fade: blipfade 3.2s infinite;
+  --animate-blink: blink 1.2s steps(2) infinite;
+  --animate-shimmer: shimmer 2.8s ease-in-out infinite;
+  --animate-scan: scan 4.5s linear infinite;
+  --animate-floor-move: floorMove 6s linear infinite;
+  --animate-slide-in: slideIn 0.5s forwards;
+
+  @keyframes rotate {
+    to { transform: rotate(360deg); }
   }
-  .light {
-    color-scheme: light;
-    --page-bg: #f4f4f5;
-    --sidebar-bg: #ffffff;
-    --card-bg: #ffffff;
-    --card-border: #e4e4e7;
-    --card-border-hover: #d4d4d8;
-    
-    --t1: #09090b;
-    --t2: #52525b;
-    --t3: #71717a;
-    
-    --nav-active: #f4f4f5;
-    --nav-hover: #fafafa;
-    
-    --accent: #09090b;
-    --accent-dim: rgba(0, 0, 0, 0.1);
+  @keyframes blipfade {
+    0%, 100% { opacity: 0; }
+    8%, 20% { opacity: 1; }
+    40% { opacity: 0; }
   }
-  
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html { font-size: 14px; }
-  body {
-    background: var(--page-bg);
-    color: var(--t1);
-    font-family: "Inter", -apple-system, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    min-height: 100vh;
+  @keyframes blink {
+    50% { opacity: 0; }
+  }
+  @keyframes shimmer {
+    0% { left: -60%; }
+    60%, 100% { left: 130%; }
+  }
+  @keyframes scan {
+    0% { top: -2%; }
+    100% { top: 102%; }
+  }
+  @keyframes floorMove {
+    from { background-position: 0 0; }
+    to { background-position: 0 60px; }
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(8px); }
+    to { opacity: 1; transform: none; }
   }
 }
 
-@layer components {
-  /* ── Sidebar ─────────────────────────── */
-  .sidebar {
-    position: fixed; inset: 0 auto 0 0;
-    width: 240px;
-    background: var(--sidebar-bg);
-    border-right: 1px solid var(--card-border);
-    display: flex; flex-direction: column;
-    z-index: 50;
-  }
-
-  /* ── Solid Card ──────────────────────── */
-  .card, .glass, .glass-card {
-    background: var(--card-bg);
-    border: 1px solid var(--card-border);
-    border-radius: 12px;
-    overflow: hidden;
-  }
-
-  /* ── Buttons ─────────────────────────── */
-  .btn-primary {
-    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-    background: var(--t1); color: var(--page-bg);
-    font-weight: 500; font-size: 13px;
-    padding: 8px 16px; border-radius: 6px;
-    border: none; cursor: pointer;
-    transition: opacity 0.15s;
-  }
-  .btn-primary:hover { opacity: 0.85; }
-
-  /* ── Data Table ──────────────────────── */
-  .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  .data-table thead th {
-    text-align: left; padding: 12px 16px;
-    font-size: 11px; font-weight: 600;
-    text-transform: uppercase; letter-spacing: 0.05em;
-    color: var(--t3);
-    border-bottom: 1px solid var(--card-border);
-  }
-  .data-table tbody td {
-    padding: 14px 16px;
-    color: var(--t1);
-    border-bottom: 1px solid var(--card-border);
-  }
-  .data-table tbody tr:last-child td { border-bottom: none; }
-  
-  /* ── Inputs ──────────────────────────── */
-  .input-field {
-    display: block;
-    width: 100%;
-    background: transparent;
-    color: var(--t1);
-    border: 1px solid var(--card-border);
-    border-radius: 6px;
-    padding: 10px 14px;
-    font-size: 14px; 
-    font-family: inherit; 
-    outline: none;
-    transition: border-color 0.15s;
-    margin-top: 4px;
-  }
-  .input-field::placeholder { color: var(--t3); }
-  .input-field:focus { border-color: var(--t2); }
-  
-  .input-field option {
-    background: var(--page-bg);
-    color: var(--t1);
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
   }
   
-  /* ── Badges ──────────────────────────── */
-  .badge-safe { display:inline-flex; padding:4px 10px; border-radius:4px; font-size:11px; font-weight:500; background:rgba(255,255,255,0.1); color:var(--t1); }
-  .badge-medium { display:inline-flex; padding:4px 10px; border-radius:4px; font-size:11px; font-weight:500; background:rgba(255,255,255,0.05); color:var(--t2); }
-  .badge-fraud { display:inline-flex; padding:4px 10px; border-radius:4px; font-size:11px; font-weight:500; background:transparent; color:var(--t3); border:1px solid var(--card-border); }
+  html, body {
+    height: 100%;
+  }
 
-  /* ── Toggle ──────────────────────────── */
-  .toggle-track {
-    width: 36px; height: 20px; border-radius: 999px;
-    background: var(--card-border);
-    position: relative; cursor: pointer; flex-shrink: 0;
+  body {
+    background: var(--color-sentinel-base);
+    color: var(--color-sentinel-text);
+    font-family: var(--font-mono);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
   }
-  .toggle-track.active { background: var(--t1); }
-  .toggle-thumb {
-    position: absolute; top: 2px; left: 2px;
-    width: 16px; height: 16px; border-radius: 50%;
-    background: var(--page-bg);
-    transition: transform 0.2s;
-  }
-  .toggle-track.active .toggle-thumb { transform: translateX(16px); }
 }
