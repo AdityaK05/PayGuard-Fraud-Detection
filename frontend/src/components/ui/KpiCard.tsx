@@ -1,4 +1,3 @@
-import React from "react"
 import { TerminalPanel } from "./TerminalPanel"
 
 interface KpiCardProps {

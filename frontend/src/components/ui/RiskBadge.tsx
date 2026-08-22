@@ -1,5 +1,3 @@
-import React from "react";
-
 type RiskLevel = "safe" | "review" | "block";
 
 interface RiskBadgeProps {

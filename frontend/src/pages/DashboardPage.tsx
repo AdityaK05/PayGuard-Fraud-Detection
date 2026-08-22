@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react"
-import { motion } from "framer-motion"
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 import { TerminalPanel } from "@/components/ui/TerminalPanel"
 import { KpiCard } from "@/components/ui/KpiCard"

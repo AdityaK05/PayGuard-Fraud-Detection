@@ -1,7 +1,6 @@
 import { useState } from "react"
 import { useAuth } from "@/context/AuthContext"
 import { TerminalPanel } from "@/components/ui/TerminalPanel"
-import { TerminalButton } from "@/components/ui/TerminalButton"
 import { AlertCircle, User, Shield, Key } from "lucide-react"
 
 export default function SettingsPage() {

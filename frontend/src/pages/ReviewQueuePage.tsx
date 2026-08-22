@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react"
 import { TerminalPanel } from "@/components/ui/TerminalPanel"
 import { RiskBadge } from "@/components/ui/RiskBadge"
-import { TerminalButton } from "@/components/ui/TerminalButton"
 import api from "@/lib/api"
 
 interface Transaction {
