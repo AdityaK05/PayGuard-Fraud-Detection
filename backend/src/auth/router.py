@@ -6,8 +6,9 @@ API endpoints for authentication: register, login, refresh.
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.ext.asyncio import AsyncSession
+from src.core.security import limiter
 
 from src.core.database import get_db
 from src.auth.schemas import (
@@ -60,7 +61,9 @@ async def register(
     response_model=AuthResponse,
     summary="Authenticate and obtain tokens",
 )
+@limiter.limit("5/minute")
 async def login(
+    request: Request,
     body: LoginRequest,
     db: Annotated[AsyncSession, Depends(get_db)],
 ):

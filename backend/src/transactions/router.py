@@ -6,8 +6,9 @@ API endpoints for transaction submission, history, and dashboard.
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
+from src.main import limiter
 
 from src.core.database import get_db
 from src.core.dependencies import get_current_user
@@ -28,7 +29,9 @@ router = APIRouter(tags=["Transactions"])
     response_model=PredictionResultResponse,
     summary="Submit transaction for fraud prediction",
 )
+@limiter.limit("10/minute")
 async def predict_transaction(
+    request: Request,
     body: TransactionCreate,
     current_user: Annotated[User, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(get_db)],

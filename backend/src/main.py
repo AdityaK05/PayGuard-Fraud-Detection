@@ -14,9 +14,14 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 
 from src.core.config import get_settings
 from src.core.database import init_db
+from src.core.security import limiter
 
 settings = get_settings()
 
@@ -72,6 +77,11 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
+# Attach SlowAPI limiter to the app
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
+
 # ── CORS Middleware ──────────────────────────────────────────────
 
 app.add_middleware(
@@ -82,6 +92,19 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ── Security Headers Middleware ──────────────────────────────────
+
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    """Add standard security headers (Helmet equivalent)."""
+    response = await call_next(request)
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Content-Security-Policy"] = "default-src 'self'"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    return response
 
 
 # ── Request Timing Middleware ────────────────────────────────────
@@ -111,14 +134,12 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
-    """Catch-all exception handler for unhandled errors."""
+    """Catch-all exception handler for unhandled errors. Sanitized for production."""
+    # In a real app, log the actual exception to a secure logging service here
+    print(f"INTERNAL_SERVER_ERROR: {str(exc)}")
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={
-            "detail": "An internal error occurred. Please try again later.",
-            "type": type(exc).__name__,
-            "msg": str(exc),
-        },
+        content={"detail": "An internal error occurred. Please try again later."},
     )
 
 

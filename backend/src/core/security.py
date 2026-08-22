@@ -9,11 +9,14 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from jose import JWTError, jwt
-from passlib.context import CryptContext
 
 from src.core.config import get_settings
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 settings = get_settings()
+
+limiter = Limiter(key_func=get_remote_address)
 
 import bcrypt
 
