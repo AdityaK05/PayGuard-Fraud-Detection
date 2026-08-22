@@ -8,6 +8,7 @@ import { ThemeProvider } from "./context/ThemeContext"
 import AppLayout from "./components/layout/AppLayout"
 
 import LoginPage from "@/pages/LoginPage"
+import SignupPage from "@/pages/SignupPage"
 import DashboardPage from "@/pages/DashboardPage"
 import HistoryPage from "@/pages/HistoryPage"
 import ReviewQueuePage from "@/pages/ReviewQueuePage"
@@ -27,6 +28,7 @@ export default function App() {
               {/* Public Routes */}
               <Route path="/" element={<LoginPage />} />
               <Route path="/login" element={<LoginPage />} />
+              <Route path="/signup" element={<SignupPage />} />
 
               {/* Protected App Routes */}
               <Route element={<AppLayout />}>
