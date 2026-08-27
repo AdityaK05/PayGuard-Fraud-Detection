@@ -23,8 +23,8 @@ export default function LoginPage() {
       await login(formData.email, formData.password)
       navigate("/dashboard")
     } catch (err: any) {
-      // Security: Do not expose backend error details like character limits or stack traces
-      setError("ACCESS DENIED: INVALID CREDENTIALS");
+      const detail = err.response?.data?.detail
+      setError(detail ? `[ACCESS DENIED] ${detail.toUpperCase()}` : "ACCESS DENIED: NETWORK OR SERVER ERROR")
       setLoading(false)
     }
   }

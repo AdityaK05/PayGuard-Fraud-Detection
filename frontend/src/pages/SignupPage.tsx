@@ -22,8 +22,8 @@ export default function SignupPage() {
       await register(formData.email, formData.name, formData.password, "user")
       navigate("/dashboard")
     } catch (err: any) {
-      // Security engineer persona: non-descriptive error
-      setError("REGISTRATION FAILED: UNKNOWN ERROR")
+      const detail = err.response?.data?.detail
+      setError(detail ? `[API REJECTED] ${detail.toUpperCase()}` : "REGISTRATION FAILED: NETWORK OR SERVER ERROR")
       setLoading(false)
     }
   }
