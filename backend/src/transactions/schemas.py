@@ -56,6 +56,7 @@ class TransactionResponse(BaseModel):
     timestamp: datetime
     risk_score: Optional[int] = None
     risk_level: Optional[str] = None
+    shap_explanation: Optional[dict[str, Any]] = None
 
     model_config = {"from_attributes": True}
 

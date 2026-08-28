@@ -305,7 +305,7 @@ class TransactionService:
             "prediction": result.prediction,
             "confidence": result.confidence,
             "model_version": result.model_version,
-            "shap_explanation": shap_data,
+            "shap_explanation": shap_data.get("all_shap_values") if isinstance(shap_data, dict) else None,
             "timestamp": now,
         }
 
@@ -352,7 +352,7 @@ class TransactionService:
                 "timestamp": tx.timestamp,
                 "risk_score": tx.prediction.risk_score if tx.prediction else None,
                 "risk_level": tx.prediction.risk_level if tx.prediction else None,
-                "shap_explanation": tx.prediction.shap_explanation if tx.prediction else None,
+                "shap_explanation": tx.prediction.shap_explanation.get("all_shap_values") if tx.prediction and isinstance(tx.prediction.shap_explanation, dict) else None,
             }
             items.append(tx_dict)
 
