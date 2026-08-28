@@ -110,9 +110,17 @@ def _generate_legitimate_transaction(
         seconds=random.randint(0, 59),
     )
     
+    # Consistent IP and Device based on user_idx
+    np.random.seed(user_idx)
+    user_ip = _generate_ip()
+    user_device = random.choice(DEVICE_TYPES[:2])
+    user_os = random.choice(OS_TYPES[:4])
+    np.random.seed() # reset seed
+    
     # 95% chance of normal device, 5% chance they use an unusual device (web/feature phone)
-    device_choices = DEVICE_TYPES[:2] if random.random() < 0.95 else DEVICE_TYPES
-    os_choices = OS_TYPES[:4] if random.random() < 0.95 else OS_TYPES
+    device_val = user_device if random.random() < 0.95 else random.choice(DEVICE_TYPES)
+    os_val = user_os if random.random() < 0.95 else random.choice(OS_TYPES)
+    ip_val = user_ip if random.random() < 0.95 else _generate_ip()
 
     return {
         "transaction_id": f"TXN{tx_id:06d}",
@@ -126,9 +134,9 @@ def _generate_legitimate_transaction(
         "location_lng": round(lng + np.random.normal(0, 0.01), 6),
         "timestamp": timestamp,
         "payment_type": random.choice(PAYMENT_TYPES),
-        "device_type": random.choice(device_choices),
-        "ip_address": _generate_ip(),
-        "os_type": random.choice(os_choices),
+        "device_type": device_val,
+        "ip_address": ip_val,
+        "os_type": os_val,
         "bank_name": random.choice(BANK_NAMES),
         "is_fraud": 0,
     }

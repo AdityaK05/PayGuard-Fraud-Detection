@@ -30,14 +30,9 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="relative z-10 min-h-screen flex flex-col lg:flex-row items-center justify-center gap-12 lg:gap-[90px] p-6 lg:p-10 font-mono">
-      {/* Radar Section */}
-      <div className="hidden md:block">
-        <RadarSweep txAnalyzed="2,481,904" />
-      </div>
-
+    <div className="relative z-10 min-h-screen flex flex-col items-center justify-center p-6 lg:p-10 font-mono">
       {/* Auth Panel */}
-      <TerminalPanel className="w-full max-w-[480px] lg:min-w-[480px] shrink-0">
+      <TerminalPanel className="w-full max-w-[480px] shrink-0">
         <div className="flex items-center gap-2.5 mb-8">
           <div className="w-[26px] h-[26px] flex items-center justify-center border border-sentinel-green text-[13px] text-sentinel-green">
             ◈

@@ -101,25 +101,7 @@ export default function HistoryPage() {
               </thead>
               <tbody>
                 {filtered.map((tx) => (
-                  <tr key={tx.id} className="border-b border-sentinel-border/30 text-[11px] hover:bg-sentinel-border/10 transition-colors">
-                    <td className="py-3 px-4 text-sentinel-green">{tx.transaction_id.slice(0, 16)}...</td>
-                    <td className="py-3 px-4 uppercase text-sentinel-text-bright">{tx.merchant_category} <span className="text-sentinel-text-muted">({tx.merchant_id.slice(0, 4)})</span></td>
-                    <td className="py-3 px-4 text-sentinel-text-muted">{tx.payment_type}</td>
-                    <td className="py-3 px-4 text-right font-sans font-bold">₹{tx.amount.toLocaleString()}</td>
-                    <td className="py-3 px-4 text-center">
-                      {tx.risk_level ? (
-                         <span className={tx.risk_level === 'high' ? 'text-sentinel-red' : tx.risk_level === 'medium' ? 'text-sentinel-amber' : 'text-sentinel-green'}>
-                           {tx.risk_score}
-                         </span>
-                      ) : (
-                         <span className="text-sentinel-text-muted">—</span>
-                      )}
-                    </td>
-                    <td className="py-3 px-4">
-                      <RiskBadge level={tx.status === "blocked" ? "block" : tx.status === "approved" ? "safe" : "review"} />
-                    </td>
-                    <td className="py-3 px-4 text-sentinel-text-muted">{new Date(tx.timestamp).toLocaleString()}</td>
-                  </tr>
+                  <HistoryRow key={tx.id} tx={tx} />
                 ))}
               </tbody>
             </table>
@@ -153,3 +135,67 @@ export default function HistoryPage() {
     </div>
   )
 }
+
+function HistoryRow({ tx }: { tx: Transaction }) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <>
+      <tr 
+        onClick={() => setExpanded(!expanded)}
+        className="border-b border-sentinel-border/30 text-[11px] hover:bg-sentinel-border/10 transition-colors cursor-pointer"
+      >
+        <td className="py-3 px-4 text-sentinel-green">{tx.transaction_id.slice(0, 16)}...</td>
+        <td className="py-3 px-4 uppercase text-sentinel-text-bright">{tx.merchant_category} <span className="text-sentinel-text-muted">({tx.merchant_id.slice(0, 4)})</span></td>
+        <td className="py-3 px-4 text-sentinel-text-muted">{tx.payment_type}</td>
+        <td className="py-3 px-4 text-right font-sans font-bold">₹{tx.amount.toLocaleString()}</td>
+        <td className="py-3 px-4 text-center">
+          {tx.risk_level ? (
+             <span className={tx.risk_level === 'high' || tx.risk_level === 'fraud' ? 'text-sentinel-red' : tx.risk_level === 'medium' ? 'text-sentinel-amber' : 'text-sentinel-green'}>
+               {tx.risk_score}
+             </span>
+          ) : (
+             <span className="text-sentinel-text-muted">—</span>
+          )}
+        </td>
+        <td className="py-3 px-4">
+          <RiskBadge level={tx.status === "blocked" ? "block" : tx.status === "approved" ? "safe" : "review"} />
+        </td>
+        <td className="py-3 px-4 text-sentinel-text-muted">{new Date(tx.timestamp).toLocaleString()}</td>
+      </tr>
+      {expanded && tx.shap_explanation && (
+        <tr className="bg-[#030805] border-b border-sentinel-border/30">
+          <td colSpan={7} className="p-4">
+            <div className="border border-sentinel-border/50 p-4">
+              <h4 className="text-[10px] text-sentinel-text-muted tracking-[0.1em] mb-4 uppercase">SHAP Feature Importance (Explainability)</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3 font-mono text-[10px]">
+                {Object.entries(tx.shap_explanation)
+                  .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))
+                  .slice(0, 8)
+                  .map(([feature, impact], i) => (
+                    <div key={i} className="flex flex-col gap-1">
+                      <div className="flex justify-between text-[#3B5C48]">
+                        <span>{feature.toUpperCase()}</span>
+                        <span className={impact > 0 ? "text-sentinel-red" : "text-sentinel-green"}>
+                          {impact > 0 ? "+" : ""}{impact.toFixed(3)}
+                        </span>
+                      </div>
+                      <div className="h-1.5 w-full bg-[#050C08] rounded-full overflow-hidden flex">
+                          <div className="w-1/2 flex justify-end">
+                            {impact < 0 && <div className="h-full bg-sentinel-green" style={{ width: `${Math.min(100, Math.abs(impact) * 30)}%` }} />}
+                          </div>
+                          <div className="w-1/2 flex justify-start">
+                            {impact > 0 && <div className="h-full bg-sentinel-red" style={{ width: `${Math.min(100, impact * 30)}%` }} />}
+                          </div>
+                      </div>
+                    </div>
+                ))}
+              </div>
+            </div>
+          </td>
+        </tr>
+      )}
+    </>
+  )
+}
+

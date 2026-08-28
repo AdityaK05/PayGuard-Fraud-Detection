@@ -33,12 +33,57 @@ class FeatureEngineer:
             df["is_high_amount"] = 0
             
         # New Feature: Risky Merchant Category
-        risky_categories = ["jewellery", "real_estate", "gaming"]
+        risky_categories = ["jewellery", "real_estate", "gaming", "crypto", "betting"]
         if "merchant_category" in ref.columns:
             df["is_risky_merchant"] = ref["merchant_category"].isin(risky_categories).astype(int)
         else:
             df["is_risky_merchant"] = 0
             
+        # New Features: Behavioral Context (New IP, New Device, New Merchant)
+        if "user_id" in ref.columns:
+            # We sort by timestamp to do cumulative counts properly if it's the full training set
+            if "timestamp" in ref.columns:
+                ref_sorted = ref.sort_values(["user_id", "timestamp"])
+            else:
+                ref_sorted = ref
+                
+            if "ip_address" in ref.columns:
+                # Cumulative count of this IP for this user prior to this transaction
+                cum_ip = ref_sorted.groupby(["user_id", "ip_address"]).cumcount()
+                # If cumcount == 0, it's the first time they used this IP
+                df["is_new_ip"] = (cum_ip == 0).astype(int).reindex(df.index)
+            else:
+                df["is_new_ip"] = 1
+                
+            if "device_type" in ref.columns and "os_type" in ref.columns:
+                # Combine to device signature
+                device_sig = ref_sorted["device_type"].astype(str) + "_" + ref_sorted["os_type"].astype(str)
+                cum_device = device_sig.groupby(ref_sorted["user_id"]).cumcount() # Wait, no, group by user_id AND device_sig
+                cum_device = ref_sorted.assign(sig=device_sig).groupby(["user_id", "sig"]).cumcount()
+                df["is_new_device"] = (cum_device == 0).astype(int).reindex(df.index)
+            else:
+                df["is_new_device"] = 1
+                
+            if "merchant_id" in ref.columns:
+                cum_merch = ref_sorted.groupby(["user_id", "merchant_id"]).cumcount()
+                df["is_new_merchant"] = (cum_merch == 0).astype(int).reindex(df.index)
+            else:
+                df["is_new_merchant"] = 1
+                
+            # Unusual Category
+            if "merchant_category" in ref.columns:
+                cum_cat = ref_sorted.groupby(["user_id", "merchant_category"]).cumcount()
+                df["is_new_category"] = (cum_cat == 0).astype(int).reindex(df.index)
+            else:
+                df["is_new_category"] = 1
+                
+        else:
+            # If no user_id (e.g. single prediction without history), assume worst-case for security
+            df["is_new_ip"] = 1
+            df["is_new_device"] = 1
+            df["is_new_merchant"] = 1
+            df["is_new_category"] = 1
+
         df = df.fillna(0)
         return df
 

@@ -352,6 +352,7 @@ class TransactionService:
                 "timestamp": tx.timestamp,
                 "risk_score": tx.prediction.risk_score if tx.prediction else None,
                 "risk_level": tx.prediction.risk_level if tx.prediction else None,
+                "shap_explanation": tx.prediction.shap_explanation if tx.prediction else None,
             }
             items.append(tx_dict)
 
