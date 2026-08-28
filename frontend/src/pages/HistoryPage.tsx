@@ -17,6 +17,7 @@ interface Transaction {
   timestamp: string
   risk_score: number | null
   risk_level: string | null
+  shap_explanation?: Record<string, number>
 }
 
 export default function HistoryPage() {

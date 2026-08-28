@@ -2,7 +2,6 @@ import { useState } from "react"
 import { useNavigate, Link } from "react-router-dom"
 import { useAuth } from "@/context/AuthContext"
 import { TerminalPanel } from "@/components/ui/TerminalPanel"
-import { RadarSweep } from "@/components/ui/RadarSweep"
 import { TerminalButton } from "@/components/ui/TerminalButton"
 
 export default function SignupPage() {
@@ -109,10 +108,6 @@ export default function SignupPage() {
         </div>
       </TerminalPanel>
 
-      {/* Radar Section */}
-      <div className="hidden md:block">
-        <RadarSweep txAnalyzed="2,481,904" />
-      </div>
     </div>
   )
 }
