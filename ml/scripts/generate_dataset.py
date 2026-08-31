@@ -33,8 +33,29 @@ OUTPUT_FILE = os.path.join(OUTPUT_DIR, "upi_transactions.csv")
 MERCHANT_CATEGORIES = [
     "grocery", "electronics", "food_delivery", "travel", "fuel",
     "entertainment", "utilities", "healthcare", "education", "fashion",
-    "jewellery", "real_estate", "insurance", "gaming", "charity",
+    "jewellery", "real_estate", "insurance", "gaming", "charity", "crypto", "betting",
 ]
+
+# (Mean, Max) for normal legitimate transactions
+CATEGORY_LIMITS = {
+    "grocery": (1500, 10000),
+    "food_delivery": (500, 3000),
+    "entertainment": (1000, 5000),
+    "utilities": (2000, 15000),
+    "fuel": (2000, 10000),
+    "fashion": (3000, 20000),
+    "electronics": (15000, 100000),
+    "travel": (10000, 80000),
+    "healthcare": (5000, 50000),
+    "education": (20000, 150000),
+    "jewellery": (30000, 300000),
+    "real_estate": (50000, 500000),
+    "insurance": (10000, 50000),
+    "gaming": (1000, 10000),
+    "charity": (1000, 10000),
+    "crypto": (50000, 500000),
+    "betting": (5000, 50000),
+}
 
 PAYMENT_TYPES = ["p2p", "p2m", "bill_payment", "recharge", "subscription"]
 
@@ -92,9 +113,13 @@ def _generate_legitimate_transaction(
     """Create a single legitimate transaction with realistic distributions."""
     city_name, lat, lng = random.choice(CITIES)
     
-    # Allow amounts up to 1L (100,000) for real-world UPI cap
-    amount = round(np.random.lognormal(mean=5.5, sigma=1.2), 2)
-    amount = min(amount, 100_000.0) 
+    category = random.choice(MERCHANT_CATEGORIES)
+    mean_val, max_val = CATEGORY_LIMITS.get(category, (2000, 20000))
+    
+    # Scale lognormal based on category mean
+    mu = np.log(mean_val) - 0.5
+    amount = round(np.random.lognormal(mean=mu, sigma=1.0), 2)
+    amount = min(amount, float(max_val)) 
 
     # Legitimate transactions happen at all hours, with a slight peak during the day
     if random.random() < 0.20:
@@ -127,7 +152,7 @@ def _generate_legitimate_transaction(
         "user_id": f"USR{user_idx:04d}",
         "upi_id": _generate_upi_id(user_idx),
         "amount": amount,
-        "merchant_category": random.choice(MERCHANT_CATEGORIES),
+        "merchant_category": category,
         "merchant_id": _generate_merchant_id(),
         "location_city": city_name,
         "location_lat": round(lat + np.random.normal(0, 0.01), 6),
@@ -162,9 +187,16 @@ def _generate_fraudulent_transaction(
     # Fraud happens uniformly at ANY hour. The model MUST NOT rely purely on time.
     hour = random.randint(0, 23)
     
-    # 70% of fraud involves high amounts, 30% involves small test amounts
+    category = random.choice(["jewellery", "real_estate", "gaming", "electronics", "charity", "crypto", "betting", "grocery"])
+    _, max_val = CATEGORY_LIMITS.get(category, (2000, 20000))
+
+    # Fraud amounts
     if random.random() < 0.70:
-        amount = round(np.random.lognormal(mean=9.0, sigma=1.2), 2)
+        # Fraudsters either exceed the max category bound wildly (e.g. 80k for grocery)
+        if random.random() < 0.5:
+            amount = round(np.random.uniform(max_val * 2, max_val * 10), 2)
+        else:
+            amount = round(np.random.lognormal(mean=9.0, sigma=1.2), 2)
         amount = min(amount, 5_000_000.0) # Massive outliers
     else:
         amount = round(np.random.uniform(1.0, 50.0), 2) # Pinging with small amounts
@@ -186,7 +218,7 @@ def _generate_fraudulent_transaction(
         "user_id": f"USR{user_idx:04d}",
         "upi_id": _generate_upi_id(user_idx),
         "amount": amount,
-        "merchant_category": random.choice(["jewellery", "real_estate", "gaming", "electronics", "charity"]),
+        "merchant_category": category,
         "merchant_id": _generate_merchant_id(),
         "location_city": city_name,
         "location_lat": round(lat + lat_offset, 6),

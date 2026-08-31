@@ -26,11 +26,38 @@ class FeatureEngineer:
             df["hour"] = 12
             df["is_late_night"] = 0
             
-        # New Feature: High Amount Flag
+        CATEGORY_LIMITS = {
+            "grocery": (1500, 10000), "food_delivery": (500, 3000), "entertainment": (1000, 5000),
+            "utilities": (2000, 15000), "fuel": (2000, 10000), "fashion": (3000, 20000),
+            "electronics": (15000, 100000), "travel": (10000, 80000), "healthcare": (5000, 50000),
+            "education": (20000, 150000), "jewellery": (30000, 300000), "real_estate": (50000, 500000),
+            "insurance": (10000, 50000), "gaming": (1000, 10000), "charity": (1000, 10000),
+            "crypto": (50000, 500000), "betting": (5000, 50000),
+        }
+            
+        # New Feature: High Amount Flag & Amount vs Category Average
         if "amount" in ref.columns:
             df["is_high_amount"] = (ref["amount"] > 50000).astype(int)
+            if "merchant_category" in ref.columns:
+                # Map the mean amount for the category
+                category_means = ref["merchant_category"].map(lambda c: CATEGORY_LIMITS.get(c, (2000, 20000))[0])
+                # Ratio of actual amount to category average
+                df["amount_vs_category_avg"] = ref["amount"] / category_means
+            else:
+                df["amount_vs_category_avg"] = ref["amount"] / 2000.0
         else:
             df["is_high_amount"] = 0
+            df["amount_vs_category_avg"] = 0
+            
+        # New Feature: Is unusual hour for physical retail
+        if "merchant_category" in ref.columns and "hour" in df.columns:
+            physical_categories = ["grocery", "fashion", "electronics", "jewellery", "fuel"]
+            df["is_unusual_hour_for_category"] = (
+                ref["merchant_category"].isin(physical_categories) & 
+                df["is_late_night"].astype(bool)
+            ).astype(int)
+        else:
+            df["is_unusual_hour_for_category"] = 0
             
         # New Feature: Risky Merchant Category
         risky_categories = ["jewellery", "real_estate", "gaming", "crypto", "betting"]
