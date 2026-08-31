@@ -48,11 +48,12 @@ api.interceptors.response.use(
           localStorage.setItem("payguard_refresh_token", data.refresh_token)
           originalRequest.headers.Authorization = `Bearer ${data.access_token}`
           return api(originalRequest)
-        } catch {
+        } catch (refreshError) {
           localStorage.removeItem("payguard_access_token")
           localStorage.removeItem("payguard_refresh_token")
           localStorage.removeItem("payguard_user")
-          window.location.href = "/login"
+          // Allow the application to handle the routing via React state/router
+          return Promise.reject(refreshError)
         }
       }
     }
