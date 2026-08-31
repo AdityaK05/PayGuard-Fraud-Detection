@@ -90,9 +90,9 @@ class FraudPredictor:
         fraud_probability = float(self.xgb_model.predict_proba(X_enriched)[0, 1])
         confidence = float(max(self.xgb_model.predict_proba(X_enriched)[0]))
         
-        xgb_component = fraud_probability * 100 * 0.70
+        xgb_component = fraud_probability * 100 * 0.85
         normalized_anomaly = max(0, min(1, (0.5 - anomaly_score)))
-        if_component = normalized_anomaly * 100 * 0.30
+        if_component = normalized_anomaly * 100 * 0.15
         risk_score = max(0, min(100, int(round(xgb_component + if_component))))
         
         risk_level = "safe" if risk_score <= 30 else "medium" if risk_score <= 60 else "fraud"

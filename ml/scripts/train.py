@@ -61,9 +61,9 @@ def main():
     clf = xgb.XGBClassifier(
         n_estimators=100,
         learning_rate=0.05,
-        max_depth=3,  
-        reg_alpha=20, # Increased L1 regularization
-        reg_lambda=20, # Increased L2 regularization
+        max_depth=5,  
+        reg_alpha=5, # Reduced L1 regularization to prevent underfitting
+        reg_lambda=5, # Reduced L2 regularization to prevent underfitting
         subsample=0.8, # Subsample to prevent relying on specific rows
         colsample_bytree=0.8, # Prevent relying on single features (like time)
         scale_pos_weight=scale_pos_weight,

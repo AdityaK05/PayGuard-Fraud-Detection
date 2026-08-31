@@ -39,8 +39,13 @@ class FeatureEngineer:
         if "amount" in ref.columns:
             df["is_high_amount"] = (ref["amount"] > 50000).astype(int)
             if "merchant_category" in ref.columns:
+                def get_cat_mean(cat):
+                    c = str(cat).lower()
+                    if c == "groceries": c = "grocery"
+                    return CATEGORY_LIMITS.get(c, (2000, 20000))[0]
+                
                 # Map the mean amount for the category
-                category_means = ref["merchant_category"].map(lambda c: CATEGORY_LIMITS.get(c, (2000, 20000))[0])
+                category_means = ref["merchant_category"].map(get_cat_mean)
                 # Ratio of actual amount to category average
                 df["amount_vs_category_avg"] = ref["amount"] / category_means
             else:
@@ -51,9 +56,9 @@ class FeatureEngineer:
             
         # New Feature: Is unusual hour for physical retail
         if "merchant_category" in ref.columns and "hour" in df.columns:
-            physical_categories = ["grocery", "fashion", "electronics", "jewellery", "fuel"]
+            physical_categories = ["grocery", "groceries", "fashion", "electronics", "jewellery", "fuel"]
             df["is_unusual_hour_for_category"] = (
-                ref["merchant_category"].isin(physical_categories) & 
+                ref["merchant_category"].str.lower().isin(physical_categories) & 
                 df["is_late_night"].astype(bool)
             ).astype(int)
         else:
@@ -117,16 +122,18 @@ class FeatureEngineer:
 def main():
     datasets_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "datasets"))
     preprocessed_file = os.path.join(datasets_dir, "upi_transactions_preprocessed.csv")
+    raw_file = os.path.join(datasets_dir, "upi_transactions.csv")
     
-    if not os.path.exists(preprocessed_file):
+    if not os.path.exists(preprocessed_file) or not os.path.exists(raw_file):
         print("Run preprocessing first!")
         return
         
     print("Feature engineering...")
     df_preprocessed = pd.read_csv(preprocessed_file)
+    df_raw = pd.read_csv(raw_file)
     
     fe = FeatureEngineer()
-    df_enriched = fe.transform(df_preprocessed, raw_df=df_preprocessed)
+    df_enriched = fe.transform(df_preprocessed, raw_df=df_raw)
     
     output_file = os.path.join(datasets_dir, "upi_transactions_features.csv")
     df_enriched.to_csv(output_file, index=False)
