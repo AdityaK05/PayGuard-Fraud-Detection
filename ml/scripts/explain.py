@@ -22,13 +22,10 @@ import warnings
 from typing import Optional
 
 import joblib
-import matplotlib
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import shap
 
-matplotlib.use("Agg")
 warnings.filterwarnings("ignore")
 
 sys.path.insert(0, os.path.dirname(__file__))
@@ -36,7 +33,6 @@ sys.path.insert(0, os.path.dirname(__file__))
 MODELS_DIR = os.path.join(os.path.dirname(__file__), "..", "models")
 EVAL_DIR = os.path.join(MODELS_DIR, "evaluation")
 
-plt.style.use("dark_background")
 BG_COLOR = "#0a0e1a"
 
 
@@ -146,6 +142,11 @@ class SHAPExplainer:
         Returns:
             Path to the saved plot.
         """
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+        plt.style.use("dark_background")
+        
         save_dir = output_dir or EVAL_DIR
         os.makedirs(save_dir, exist_ok=True)
 
