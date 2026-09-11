@@ -44,6 +44,21 @@ interface BatchSummary {
   fraud_rate: number
 }
 
+const RANDOM_BANKS = ["HDFC", "SBI", "ICICI", "Axis", "Kotak", "PNB"]
+const RANDOM_CITIES = ["Mumbai", "Delhi", "Bangalore", "Hyderabad", "Pune", "Chennai"]
+const RANDOM_DEVICES = ["android", "ios", "desktop", "mobile_web"]
+const RANDOM_OS = ["android_14", "ios_17", "windows_11", "macos_14", "android_13"]
+const RANDOM_TYPES = ["p2m", "p2p", "ecommerce"]
+const RANDOM_CATEGORIES = ["food", "retail", "utilities", "travel", "entertainment"]
+
+function getRandom<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)]
+}
+
+function getJitteredLat() { return 19.076 + (Math.random() * 4 - 2) }
+function getJitteredLng() { return 72.877 + (Math.random() * 4 - 2) }
+function getMockIP() { return `${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}` }
+
 const DEFAULT_VALUES: Record<string, string | number> = {
   payment_type: "p2m",
   location_lat: 19.076,
@@ -128,17 +143,17 @@ function parsePDFText(text: string): ParsedTransaction[] {
           const merchant = words.slice(0, 2).join(" ") || "unknown"
 
           transactions.push({
-            payment_type: "p2m",
+            payment_type: getRandom(RANDOM_TYPES),
             amount,
-            merchant_category: "unknown",
+            merchant_category: getRandom(RANDOM_CATEGORIES),
             merchant_id: merchant.substring(0, 20),
-            location_city: String(DEFAULT_VALUES.location_city),
-            location_lat: Number(DEFAULT_VALUES.location_lat),
-            location_lng: Number(DEFAULT_VALUES.location_lng),
-            device_type: String(DEFAULT_VALUES.device_type),
-            ip_address: String(DEFAULT_VALUES.ip_address),
-            os_type: String(DEFAULT_VALUES.os_type),
-            bank_name: String(DEFAULT_VALUES.bank_name),
+            location_city: getRandom(RANDOM_CITIES),
+            location_lat: getJitteredLat(),
+            location_lng: getJitteredLng(),
+            device_type: getRandom(RANDOM_DEVICES),
+            ip_address: getMockIP(),
+            os_type: getRandom(RANDOM_OS),
+            bank_name: getRandom(RANDOM_BANKS),
           })
         }
       }
