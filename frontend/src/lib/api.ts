@@ -52,9 +52,13 @@ api.interceptors.response.use(
           localStorage.removeItem("payguard_access_token")
           localStorage.removeItem("payguard_refresh_token")
           localStorage.removeItem("payguard_user")
-          // Allow the application to handle the routing via React state/router
+          window.location.href = "/login"
           return Promise.reject(refreshError)
         }
+      } else {
+        localStorage.removeItem("payguard_access_token")
+        localStorage.removeItem("payguard_user")
+        window.location.href = "/login"
       }
     }
 
