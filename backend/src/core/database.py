@@ -5,19 +5,35 @@ Async SQLAlchemy engine with session factory for both SQLite (local dev)
 and PostgreSQL (production).
 """
 
+from uuid import uuid4
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.pool import NullPool
 
 from src.core.config import get_settings
 
 settings = get_settings()
 
+db_url = settings.DATABASE_URL.strip()
+
+engine_kwargs = {
+    "echo": settings.DEBUG,
+    "future": True,
+}
+
+if "sqlite" in db_url:
+    engine_kwargs["connect_args"] = {"check_same_thread": False}
+elif "postgresql" in db_url or "postgres" in db_url:
+    # Supabase / PgBouncer transaction pooler compatibility
+    engine_kwargs["poolclass"] = NullPool
+    engine_kwargs["connect_args"] = {
+        "statement_cache_size": 0,
+        "prepared_statement_name_func": lambda: f"__asyncpg_{uuid4()}__",
+    }
+
 engine = create_async_engine(
-    settings.DATABASE_URL,
-    echo=settings.DEBUG,
-    future=True,
-    # SQLite-specific: allow concurrent access
-    **({"connect_args": {"check_same_thread": False}} if "sqlite" in settings.DATABASE_URL else {}),
+    db_url,
+    **engine_kwargs,
 )
 
 async_session_factory = async_sessionmaker(

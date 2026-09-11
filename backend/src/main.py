@@ -124,22 +124,47 @@ async def add_process_time_header(request: Request, call_next):
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+def _cors_response(request: Request, response: JSONResponse) -> JSONResponse:
+    origin = request.headers.get("origin")
+    if origin:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        response.headers["Access-Control-Allow-Headers"] = "*"
+        response.headers["Access-Control-Allow-Methods"] = "*"
+    return response
+
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     """Handle standard HTTP exceptions."""
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={"detail": exc.detail},
+    return _cors_response(
+        request,
+        JSONResponse(
+            status_code=exc.status_code,
+            content={"detail": exc.detail},
+        )
+    )
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Handle validation exceptions."""
+    return _cors_response(
+        request,
+        JSONResponse(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            content={"detail": exc.errors()},
+        )
     )
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     """Catch-all exception handler for unhandled errors. Sanitized for production."""
-    # In a real app, log the actual exception to a secure logging service here
     print(f"INTERNAL_SERVER_ERROR: {str(exc)}")
-    return JSONResponse(
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={"detail": "An internal error occurred. Please try again later."},
+    return _cors_response(
+        request,
+        JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"detail": "An internal error occurred. Please try again later."},
+        )
     )
 
 
