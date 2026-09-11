@@ -14,6 +14,8 @@ from src.core.database import get_db
 from src.core.dependencies import get_current_user
 from src.core.models import User
 from src.transactions.schemas import (
+    BatchPredictionResponse,
+    BatchTransactionCreate,
     DashboardStats,
     PredictionResultResponse,
     TransactionCreate,
@@ -51,6 +53,32 @@ async def predict_transaction(
         data=body.model_dump(),
     )
     return PredictionResultResponse(**result)
+
+
+@router.post(
+    "/predict/batch",
+    response_model=BatchPredictionResponse,
+    summary="Submit a batch of transactions for fraud prediction",
+)
+async def predict_batch(
+    request: Request,
+    body: BatchTransactionCreate,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    """
+    Submit multiple transactions for batch fraud analysis.
+
+    Accepts up to 500 transactions at once. Each is processed through the
+    full ML pipeline (Preprocess → Feature Engineer → Isolation Forest →
+    XGBoost → Risk Score → Decision Engine).
+
+    Returns per-row predictions and aggregate summary statistics.
+    """
+    service = TransactionService(db)
+    tx_dicts = [tx.model_dump() for tx in body.transactions]
+    result = await service.batch_predict(user=current_user, transactions=tx_dicts)
+    return BatchPredictionResponse(**result)
 
 
 @router.get(

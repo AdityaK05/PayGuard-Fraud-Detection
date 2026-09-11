@@ -27,6 +27,16 @@ class TransactionCreate(BaseModel):
     timestamp: Optional[str] = None
 
 
+class BatchTransactionCreate(BaseModel):
+    """Payload for submitting a batch of transactions for fraud analysis."""
+    transactions: list[TransactionCreate] = Field(
+        ...,
+        min_length=1,
+        max_length=500,
+        description="Array of transactions to analyze (max 500 per batch)",
+    )
+
+
 class PredictionResultResponse(BaseModel):
     """Response payload for a fraud prediction."""
     transaction_id: str
@@ -40,6 +50,23 @@ class PredictionResultResponse(BaseModel):
     model_version: str
     shap_explanation: Optional[dict[str, Any]] = None
     timestamp: datetime
+
+
+class BatchPredictionSummary(BaseModel):
+    """Summary statistics for a batch prediction run."""
+    total_analyzed: int
+    total_approved: int
+    total_blocked: int
+    total_flagged: int  # medium risk
+    avg_risk_score: float
+    max_risk_score: int
+    fraud_rate: float
+
+
+class BatchPredictionResponse(BaseModel):
+    """Response payload for a batch fraud prediction."""
+    summary: BatchPredictionSummary
+    results: list[PredictionResultResponse]
 
 
 class TransactionResponse(BaseModel):

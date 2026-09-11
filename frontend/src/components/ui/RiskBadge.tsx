@@ -1,25 +1,34 @@
-type RiskLevel = "safe" | "review" | "block";
+import { ShieldCheck, ShieldX, AlertTriangle } from "lucide-react"
 
 interface RiskBadgeProps {
-  level: RiskLevel;
+  level: "safe" | "review" | "block" | string
 }
 
 export function RiskBadge({ level }: RiskBadgeProps) {
-  const styles = {
-    safe: "text-sentinel-green border-[rgba(0,255,150,0.4)]",
-    review: "text-sentinel-amber border-[rgba(255,193,92,0.4)]",
-    block: "text-sentinel-red border-[rgba(255,92,92,0.4)]",
-  };
+  const config: Record<string, { label: string; classes: string; Icon: typeof ShieldCheck }> = {
+    safe: {
+      label: "Approved",
+      classes: "bg-pg-green-soft text-pg-green border-pg-green/20",
+      Icon: ShieldCheck,
+    },
+    review: {
+      label: "Review",
+      classes: "bg-pg-amber-soft text-pg-amber border-pg-amber/20",
+      Icon: AlertTriangle,
+    },
+    block: {
+      label: "Blocked",
+      classes: "bg-pg-red-soft text-pg-red border-pg-red/20",
+      Icon: ShieldX,
+    },
+  }
 
-  const labels = {
-    safe: "SAFE",
-    review: "REVIEW",
-    block: "BLOCKED",
-  };
+  const { label, classes, Icon } = config[level] || config.review
 
   return (
-    <span className={`inline-block text-[9px] px-2 py-0.5 tracking-[0.05em] border ${styles[level]} font-mono`}>
-      {labels[level]}
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold tracking-wide border ${classes}`}>
+      <Icon className="w-3 h-3" />
+      {label.toUpperCase()}
     </span>
-  );
+  )
 }

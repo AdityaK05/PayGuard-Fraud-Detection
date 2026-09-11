@@ -445,6 +445,64 @@ class TransactionService:
             "model_metrics": model_metrics,
         }
 
+    async def batch_predict(
+        self,
+        user: User,
+        transactions: list[dict],
+    ) -> dict[str, Any]:
+        """
+        Process a batch of transactions through the ML pipeline.
+
+        Args:
+            user: Authenticated user making the request.
+            transactions: List of transaction dicts (each matching TransactionCreate).
+
+        Returns:
+            Dict with 'summary' (aggregate stats) and 'results' (per-row predictions).
+        """
+        results = []
+        total_approved = 0
+        total_blocked = 0
+        total_flagged = 0
+        risk_scores = []
+
+        for tx_data in transactions:
+            try:
+                result = await self.create_and_predict(user=user, data=tx_data)
+                results.append(result)
+
+                if result["prediction"] == "approved":
+                    total_approved += 1
+                elif result["prediction"] == "blocked":
+                    total_blocked += 1
+
+                if result["risk_level"] == "medium":
+                    total_flagged += 1
+
+                risk_scores.append(result["risk_score"])
+            except Exception as e:
+                # If a single row fails, record it as an error but continue
+                print(f"  ⚠ Batch row failed: {e}")
+                continue
+
+        total = len(results)
+        avg_risk = sum(risk_scores) / max(len(risk_scores), 1)
+        max_risk = max(risk_scores) if risk_scores else 0
+        fraud_rate = (total_blocked + total_flagged) / max(total, 1)
+
+        return {
+            "summary": {
+                "total_analyzed": total,
+                "total_approved": total_approved,
+                "total_blocked": total_blocked,
+                "total_flagged": total_flagged,
+                "avg_risk_score": round(avg_risk, 2),
+                "max_risk_score": max_risk,
+                "fraud_rate": round(fraud_rate, 4),
+            },
+            "results": results,
+        }
+
     @staticmethod
     def _load_model_metrics() -> dict:
         """Load training metrics from the ML models directory."""

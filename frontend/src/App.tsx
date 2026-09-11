@@ -13,7 +13,7 @@ import DashboardPage from "@/pages/DashboardPage"
 import HistoryPage from "@/pages/HistoryPage"
 import ReviewQueuePage from "@/pages/ReviewQueuePage"
 import SettingsPage from "@/pages/SettingsPage"
-import NewTransactionPage from "@/pages/NewTransactionPage"
+import BatchScanPage from "@/pages/BatchScanPage"
 import NotFoundPage from "@/pages/NotFoundPage"
 
 import SentinelShell from "./components/layout/SentinelShell"
@@ -33,7 +33,7 @@ export default function App() {
               {/* Protected App Routes */}
               <Route element={<AppLayout />}>
                 <Route path="/dashboard" element={<DashboardPage />} />
-                <Route path="/scan" element={<NewTransactionPage />} />
+                <Route path="/batch-scan" element={<BatchScanPage />} />
                 <Route path="/history" element={<HistoryPage />} />
                 <Route path="/review" element={<ReviewQueuePage />} />
                 <Route path="/settings" element={<SettingsPage />} />

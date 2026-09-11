@@ -1,56 +1,78 @@
 import { Link, useLocation } from "react-router-dom"
-import { Shield, Activity, List, Kanban, Settings, LogOut } from "lucide-react"
+import { LayoutDashboard, Upload, History, ShieldAlert, Settings, LogOut, Shield, Moon, Sun } from "lucide-react"
 import { useAuth } from "@/context/AuthContext"
+import { useTheme } from "@/context/ThemeContext"
 
 export default function SentinelSidebar() {
   const { pathname } = useLocation()
-  const { logout } = useAuth()
+  const { user, logout } = useAuth()
+  const { theme, toggleTheme } = useTheme()
 
   const links = [
-    { name: "COMMAND DECK", path: "/dashboard", icon: Activity },
-    { name: "MANUAL SCAN", path: "/scan", icon: Shield },
-    { name: "TRANSACTIONS", path: "/history", icon: List },
-    { name: "REVIEW QUEUE", path: "/review", icon: Kanban },
-    { name: "SETTINGS", path: "/settings", icon: Settings },
+    { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
+    { name: "Batch Scan", path: "/batch-scan", icon: Upload },
+    { name: "Transactions", path: "/history", icon: History },
+    { name: "Review Queue", path: "/review", icon: ShieldAlert },
+    { name: "Settings", path: "/settings", icon: Settings },
   ]
 
   return (
-    <aside className="fixed left-0 top-[60px] bottom-0 w-[240px] border-r border-sentinel-border bg-[#030805]/90 backdrop-blur-sm z-40 flex flex-col font-mono text-[11px] tracking-[0.1em]">
-      <div className="p-6 border-b border-sentinel-border/50 mb-4">
-        <div className="flex items-center gap-2 text-sentinel-green mb-1">
-          <Shield className="w-4 h-4" />
-          <span className="font-sans font-bold text-[14px]">PAYGUARD</span>
+    <aside className="fixed left-0 top-[52px] bottom-0 w-[240px] border-r border-pg-border bg-pg-surface/70 backdrop-blur-xl z-40 flex flex-col">
+      {/* Brand */}
+      <div className="px-6 py-5 border-b border-pg-border">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-pg-accent/15 flex items-center justify-center">
+            <Shield className="w-4 h-4 text-pg-accent" />
+          </div>
+          <div>
+            <div className="font-bold text-[14px] text-pg-text-white tracking-tight">PayGuard</div>
+            <div className="text-[10px] text-pg-text-muted font-medium">Fraud Detection AI</div>
+          </div>
         </div>
-        <div className="text-sentinel-text-muted text-[9px]">L3 ANALYST TERMINAL</div>
       </div>
 
-      <nav className="flex-1 flex flex-col gap-1 px-4">
+      {/* Navigation */}
+      <nav className="flex-1 flex flex-col gap-0.5 px-3 py-4">
         {links.map((link) => {
           const isActive = pathname === link.path || pathname.startsWith(link.path + "/")
           return (
             <Link
               key={link.name}
               to={link.path}
-              className={`flex items-center gap-3 px-3 py-2.5 transition-colors ${
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all duration-200 ${
                 isActive
-                  ? "bg-sentinel-green-dim text-sentinel-green border-l-2 border-sentinel-green"
-                  : "text-sentinel-text-muted hover:text-sentinel-text-bright hover:bg-sentinel-border/20 border-l-2 border-transparent"
+                  ? "bg-pg-accent/10 text-pg-accent"
+                  : "text-pg-text-muted hover:text-pg-text-bright hover:bg-pg-surface-2"
               }`}
             >
-              <link.icon className="w-4 h-4" />
+              <link.icon className="w-[18px] h-[18px]" />
               {link.name}
             </Link>
           )
         })}
       </nav>
 
-      <div className="p-4 border-t border-sentinel-border/50">
+      {/* User & Logout */}
+      <div className="p-3 border-t border-pg-border">
+        {user && (
+          <div className="px-3 py-2 mb-2">
+            <div className="text-[12px] font-medium text-pg-text-bright truncate">{user.name}</div>
+            <div className="text-[10px] text-pg-text-muted truncate">{user.email}</div>
+          </div>
+        )}
+        <button
+          onClick={toggleTheme}
+          className="flex items-center gap-3 px-3 py-2.5 mb-1 w-full text-left rounded-lg text-[13px] font-medium text-pg-text-muted hover:text-pg-text-bright hover:bg-pg-surface-2 transition-all duration-200 cursor-pointer"
+        >
+          {theme === "dark" ? <Sun className="w-[18px] h-[18px]" /> : <Moon className="w-[18px] h-[18px]" />}
+          {theme === "dark" ? "Light Mode" : "Dark Mode"}
+        </button>
         <button
           onClick={logout}
-          className="flex items-center gap-3 px-3 py-2.5 w-full text-left text-sentinel-red/80 hover:text-sentinel-red hover:bg-sentinel-red/10 transition-colors"
+          className="flex items-center gap-3 px-3 py-2.5 w-full text-left rounded-lg text-[13px] font-medium text-pg-red/70 hover:text-pg-red hover:bg-pg-red-soft transition-all duration-200 cursor-pointer"
         >
-          <LogOut className="w-4 h-4" />
-          TERMINATE SESSION
+          <LogOut className="w-[18px] h-[18px]" />
+          Sign Out
         </button>
       </div>
     </aside>

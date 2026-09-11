@@ -56,48 +56,48 @@ export default function HistoryPage() {
   return (
     <div className="max-w-[1400px] mx-auto flex flex-col gap-8">
       <div className="flex items-center justify-between mb-2">
-        <h1 className="text-xl font-bold font-sans tracking-wide text-sentinel-text-bright">
-          TRANSACTION <span className="text-sentinel-green">LEDGER</span>
+        <h1 className="text-2xl font-bold font-sans tracking-tight text-pg-text-white">
+          Transaction Ledger
         </h1>
-        <div className="text-[10px] font-mono text-sentinel-text-muted">
-          TOTAL RECORDS: {total.toLocaleString()}
+        <div className="text-[12px] font-medium text-pg-text-muted">
+          Total Records: {total.toLocaleString()}
         </div>
       </div>
 
       <TerminalPanel className="flex flex-col flex-1 p-6">
         <div className="flex justify-between items-center mb-6">
           <div className="relative w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-sentinel-green" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-pg-text-muted" />
             <input
               type="text"
-              placeholder="QUERY BY ID / MERCHANT..."
+              placeholder="Search by ID, Merchant, or Bank..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-[#030805] border border-sentinel-border p-2 pl-10 text-sentinel-text-bright font-mono text-[11px] outline-none transition-all placeholder:text-[#2C4536] focus:border-sentinel-green"
+              className="w-full bg-pg-surface-2 border border-pg-border rounded-lg p-2.5 pl-10 text-pg-text-bright text-[13px] outline-none transition-all placeholder:text-pg-text-muted focus:border-pg-accent"
             />
           </div>
         </div>
 
         {loading ? (
-          <div className="h-64 flex items-center justify-center text-sentinel-green font-mono text-[11px] animate-pulse">
-            [FETCHING LEDGER DATA...]
+          <div className="h-64 flex items-center justify-center text-pg-text-muted text-[13px] animate-pulse">
+            Fetching Ledger Data...
           </div>
         ) : filtered.length === 0 ? (
-          <div className="h-64 flex items-center justify-center text-sentinel-text-muted font-mono text-[11px]">
-            [NO MATCHING RECORDS FOUND]
+          <div className="h-64 flex items-center justify-center text-pg-text-muted text-[13px]">
+            No matching records found
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left font-mono">
+          <div className="overflow-x-auto rounded-lg border border-pg-border">
+            <table className="w-full text-left">
               <thead>
-                <tr className="border-b border-sentinel-border/50 text-[10px] tracking-[0.1em] text-sentinel-text-muted uppercase">
-                  <th className="pb-3 px-4 font-normal">TX_ID</th>
-                  <th className="pb-3 px-4 font-normal">MERCHANT</th>
-                  <th className="pb-3 px-4 font-normal">TYPE</th>
-                  <th className="pb-3 px-4 font-normal text-right">AMOUNT</th>
-                  <th className="pb-3 px-4 font-normal text-center">RISK</th>
-                  <th className="pb-3 px-4 font-normal">STATUS</th>
-                  <th className="pb-3 px-4 font-normal">TIME</th>
+                <tr className="border-b border-pg-border bg-pg-surface-2/50 text-[10px] tracking-wider font-semibold text-pg-text-muted uppercase">
+                  <th className="py-3 px-4">TX ID</th>
+                  <th className="py-3 px-4">Merchant</th>
+                  <th className="py-3 px-4">Type</th>
+                  <th className="py-3 px-4 text-right">Amount</th>
+                  <th className="py-3 px-4 text-center">Risk</th>
+                  <th className="py-3 px-4">Status</th>
+                  <th className="py-3 px-4">Time</th>
                 </tr>
               </thead>
               <tbody>
@@ -110,24 +110,24 @@ export default function HistoryPage() {
         )}
 
         {total > 15 && (
-          <div className="flex items-center justify-between mt-6 font-mono">
-            <div className="text-[10px] text-sentinel-text-muted">
-              PAGE {page} OF {Math.ceil(total / 15)}
+          <div className="flex items-center justify-between mt-6">
+            <div className="text-[12px] text-pg-text-muted">
+              Page {page} of {Math.ceil(total / 15)}
             </div>
             <div className="flex gap-4">
               <button
                 onClick={() => setPage(Math.max(1, page - 1))}
                 disabled={page === 1}
-                className="text-[11px] text-sentinel-green hover:text-white disabled:opacity-30 disabled:hover:text-sentinel-green uppercase transition-colors"
+                className="text-[13px] font-medium text-pg-text hover:text-pg-text-bright disabled:opacity-30 disabled:hover:text-pg-text transition-colors cursor-pointer"
               >
-                &lt; PREV
+                Previous
               </button>
               <button
                 onClick={() => setPage(page + 1)}
                 disabled={page >= Math.ceil(total / 15)}
-                className="text-[11px] text-sentinel-green hover:text-white disabled:opacity-30 disabled:hover:text-sentinel-green uppercase transition-colors"
+                className="text-[13px] font-medium text-pg-text hover:text-pg-text-bright disabled:opacity-30 disabled:hover:text-pg-text transition-colors cursor-pointer"
               >
-                NEXT &gt;
+                Next
               </button>
             </div>
           </div>
@@ -144,49 +144,49 @@ function HistoryRow({ tx }: { tx: Transaction }) {
     <>
       <tr 
         onClick={() => setExpanded(!expanded)}
-        className="border-b border-sentinel-border/30 text-[11px] hover:bg-sentinel-border/10 transition-colors cursor-pointer"
+        className="border-b border-pg-border/30 text-[12px] hover:bg-pg-surface-2/30 transition-colors cursor-pointer"
       >
-        <td className="py-3 px-4 text-sentinel-green">{tx.transaction_id.slice(0, 16)}...</td>
-        <td className="py-3 px-4 uppercase text-sentinel-text-bright">{tx.merchant_category} <span className="text-sentinel-text-muted">({tx.merchant_id.slice(0, 4)})</span></td>
-        <td className="py-3 px-4 text-sentinel-text-muted">{tx.payment_type}</td>
-        <td className="py-3 px-4 text-right font-sans font-bold">₹{tx.amount.toLocaleString()}</td>
+        <td className="py-3 px-4 text-pg-accent font-mono text-[11px]">{tx.transaction_id.slice(0, 16)}...</td>
+        <td className="py-3 px-4 uppercase text-pg-text-bright font-medium">{tx.merchant_category} <span className="text-pg-text-muted font-normal">({tx.merchant_id.slice(0, 4)})</span></td>
+        <td className="py-3 px-4 text-pg-text-muted uppercase">{tx.payment_type}</td>
+        <td className="py-3 px-4 text-right font-sans font-semibold text-pg-text-bright">₹{tx.amount.toLocaleString()}</td>
         <td className="py-3 px-4 text-center">
           {tx.risk_level ? (
-             <span className={tx.risk_level === 'high' || tx.risk_level === 'fraud' ? 'text-sentinel-red' : tx.risk_level === 'medium' ? 'text-sentinel-amber' : 'text-sentinel-green'}>
+             <span className={`font-mono font-bold ${tx.risk_level === 'high' || tx.risk_level === 'fraud' ? 'text-pg-red' : tx.risk_level === 'medium' ? 'text-pg-amber' : 'text-pg-green'}`}>
                {tx.risk_score}
              </span>
           ) : (
-             <span className="text-sentinel-text-muted">—</span>
+             <span className="text-pg-text-muted">—</span>
           )}
         </td>
         <td className="py-3 px-4">
           <RiskBadge level={tx.status === "blocked" ? "block" : tx.status === "approved" ? "safe" : "review"} />
         </td>
-        <td className="py-3 px-4 text-sentinel-text-muted">{new Date(tx.timestamp).toLocaleString()}</td>
+        <td className="py-3 px-4 text-pg-text-muted">{new Date(tx.timestamp).toLocaleString()}</td>
       </tr>
       {expanded && tx.shap_explanation && (
-        <tr className="bg-[#030805] border-b border-sentinel-border/30">
-          <td colSpan={7} className="p-4">
-            <div className="border border-sentinel-border/50 p-4">
-              <h4 className="text-[10px] text-sentinel-text-muted tracking-[0.1em] mb-4 uppercase">SHAP Feature Importance (Explainability)</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3 font-mono text-[10px]">
+        <tr className="bg-pg-surface-2/20 border-b border-pg-border/30">
+          <td colSpan={7} className="p-5">
+            <div className="rounded-lg border border-pg-border p-4">
+              <h4 className="text-[11px] font-semibold text-pg-text-muted uppercase tracking-wider mb-3">SHAP Feature Importance (Explainability)</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3 text-[11px]">
                 {Object.entries(tx.shap_explanation)
                   .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))
                   .slice(0, 8)
                   .map(([feature, impact], i) => (
                     <div key={i} className="flex flex-col gap-1">
-                      <div className="flex justify-between text-[#3B5C48]">
-                        <span>{feature.toUpperCase()}</span>
-                        <span className={impact > 0 ? "text-sentinel-red" : "text-sentinel-green"}>
+                      <div className="flex justify-between">
+                        <span className="text-pg-text-muted">{feature}</span>
+                        <span className={impact > 0 ? "text-pg-red font-medium" : "text-pg-green font-medium"}>
                           {impact > 0 ? "+" : ""}{impact.toFixed(3)}
                         </span>
                       </div>
-                      <div className="h-1.5 w-full bg-[#050C08] rounded-full overflow-hidden flex">
+                      <div className="h-1.5 w-full bg-pg-surface-3 rounded-full overflow-hidden flex">
                           <div className="w-1/2 flex justify-end">
-                            {impact < 0 && <div className="h-full bg-sentinel-green" style={{ width: `${Math.min(100, Math.abs(impact) * 30)}%` }} />}
+                            {impact < 0 && <div className="h-full bg-pg-green rounded-full" style={{ width: `${Math.min(100, Math.abs(impact) * 30)}%` }} />}
                           </div>
                           <div className="w-1/2 flex justify-start">
-                            {impact > 0 && <div className="h-full bg-sentinel-red" style={{ width: `${Math.min(100, impact * 30)}%` }} />}
+                            {impact > 0 && <div className="h-full bg-pg-red rounded-full" style={{ width: `${Math.min(100, impact * 30)}%` }} />}
                           </div>
                       </div>
                     </div>

@@ -23,8 +23,8 @@ export default function DashboardPage() {
   }, [])
 
   if (!ok) return (
-    <div className="h-[60vh] flex items-center justify-center text-sentinel-green font-mono text-[11px] animate-pulse">
-      [LOADING TELEMETRY DATA...]
+    <div className="h-[60vh] flex items-center justify-center text-pg-text-muted font-sans text-sm animate-pulse">
+      Loading Telemetry Data...
     </div>
   )
 
@@ -34,11 +34,11 @@ export default function DashboardPage() {
   return (
     <div className="max-w-[1400px] mx-auto flex flex-col gap-8">
       <div className="flex items-center justify-between mb-2">
-        <h1 className="text-xl font-bold font-sans tracking-wide text-sentinel-text-bright">
-          COMMAND <span className="text-sentinel-green">DECK</span>
+        <h1 className="text-2xl font-bold font-sans tracking-tight text-pg-text-white">
+          Command Deck
         </h1>
-        <div className="text-[10px] font-mono text-sentinel-text-muted">
-          LAST SYNC: {new Date().toLocaleTimeString()}
+        <div className="text-[12px] font-medium text-pg-text-muted">
+          Last sync: {new Date().toLocaleTimeString()}
         </div>
       </div>
 
@@ -49,8 +49,8 @@ export default function DashboardPage() {
         <KpiCard title="SYS LATENCY" value="28ms" trend="1ms" trendUp={false} />
         <TerminalPanel className="h-full flex items-center justify-center p-0">
           <div className="flex flex-col items-center">
-            <div className="text-[10px] tracking-[0.1em] text-sentinel-text-muted uppercase mb-2">AVG RISK INDEX</div>
-            <div className={`text-4xl font-mono ${risk > 50 ? "text-sentinel-red" : "text-sentinel-green"}`}>{risk}%</div>
+            <div className="text-[12px] font-medium text-pg-text-muted uppercase mb-2">AVG RISK INDEX</div>
+            <div className={`text-4xl font-bold font-mono ${risk > 50 ? "text-pg-red" : "text-pg-text-white"}`}>{risk}%</div>
           </div>
         </TerminalPanel>
       </div>
@@ -59,10 +59,10 @@ export default function DashboardPage() {
         {/* Telemetry Chart */}
         <TerminalPanel className="lg:col-span-2 h-[400px] flex flex-col">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-[11px] font-mono tracking-[0.1em] text-sentinel-text-muted">LIVE TELEMETRY (7D)</h2>
-            <div className="flex gap-4 font-mono text-[9px]">
-              <span className="flex items-center gap-2"><div className="w-2 h-2 bg-sentinel-green drop-shadow-[0_0_5px_#00FF96]" /> SAFE</span>
-              <span className="flex items-center gap-2"><div className="w-2 h-2 bg-sentinel-red drop-shadow-[0_0_5px_#FF5C5C]" /> BLOCKED</span>
+            <h2 className="text-sm font-semibold text-pg-text-bright">Live Telemetry (7D)</h2>
+            <div className="flex gap-4 font-medium text-[11px] text-pg-text-muted">
+              <span className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-pg-green" /> SAFE</span>
+              <span className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-pg-red" /> BLOCKED</span>
             </div>
           </div>
           <div className="flex-1 -ml-4">
@@ -70,24 +70,24 @@ export default function DashboardPage() {
               <AreaChart data={chart} margin={{top:10, right:10, left:0, bottom:0}}>
                 <defs>
                   <linearGradient id="colorSafe" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#00FF96" stopOpacity={0.2}/>
-                    <stop offset="95%" stopColor="#00FF96" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#22c55e" stopOpacity={0.2}/>
+                    <stop offset="95%" stopColor="#22c55e" stopOpacity={0}/>
                   </linearGradient>
                   <linearGradient id="colorRisk" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#FF5C5C" stopOpacity={0.2}/>
-                    <stop offset="95%" stopColor="#FF5C5C" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.2}/>
+                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="2 4" vertical={false} stroke="rgba(0,255,150,0.15)"/>
-                <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{fill:"rgba(255,255,255,0.4)", fontSize:10, fontFamily:"monospace"}} dy={10}/>
-                <YAxis axisLine={false} tickLine={false} tick={{fill:"rgba(255,255,255,0.4)", fontSize:10, fontFamily:"monospace"}}/>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(148, 163, 184, 0.1)"/>
+                <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{fill:"#94a3b8", fontSize:11, fontFamily:"Inter"}} dy={10}/>
+                <YAxis axisLine={false} tickLine={false} tick={{fill:"#94a3b8", fontSize:11, fontFamily:"Inter"}}/>
                 <Tooltip 
-                  contentStyle={{backgroundColor:"#050C08", borderColor:"rgba(0,255,150,0.25)", fontFamily:"monospace", fontSize:11, color:"#fff"}}
-                  itemStyle={{color:"#00FF96"}}
-                  cursor={{stroke: 'rgba(0,255,150,0.3)'}}
+                  contentStyle={{backgroundColor:"#1e2436", borderColor:"rgba(148, 163, 184, 0.1)", borderRadius:"8px", fontFamily:"Inter", fontSize:12, color:"#f8fafc"}}
+                  itemStyle={{color:"#e2e8f0"}}
+                  cursor={{stroke: 'rgba(148, 163, 184, 0.2)'}}
                 />
-                <Area type="monotone" dataKey="risk" stroke="#FF5C5C" strokeWidth={2} fillOpacity={1} fill="url(#colorRisk)" />
-                <Area type="monotone" dataKey="safe" stroke="#00FF96" strokeWidth={2} fillOpacity={1} fill="url(#colorSafe)" />
+                <Area type="monotone" dataKey="risk" stroke="#ef4444" strokeWidth={2} fillOpacity={1} fill="url(#colorRisk)" />
+                <Area type="monotone" dataKey="safe" stroke="#22c55e" strokeWidth={2} fillOpacity={1} fill="url(#colorSafe)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -96,23 +96,23 @@ export default function DashboardPage() {
         {/* Recent Transactions Queue */}
         <TerminalPanel className="flex flex-col h-[400px] overflow-hidden p-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-[11px] font-mono tracking-[0.1em] text-sentinel-text-muted">ACTIVE QUEUE</h2>
-            <div className="w-2 h-2 bg-sentinel-green rounded-full animate-pulse drop-shadow-[0_0_5px_#00FF96]" />
+            <h2 className="text-sm font-semibold text-pg-text-bright">Active Queue</h2>
+            <div className="w-2 h-2 bg-pg-green rounded-full animate-pulse-soft" />
           </div>
           
           <div className="flex-1 overflow-y-auto pr-2 space-y-2">
             {txs.length === 0 ? (
-              <div className="h-full flex items-center justify-center text-[10px] font-mono text-sentinel-text-muted">
-                [NO RECENT EVENTS]
+              <div className="h-full flex items-center justify-center text-[12px] font-medium text-pg-text-muted">
+                No recent events
               </div>
             ) : (
               txs.map(tx => (
-                <div key={tx.id} className="p-3 border border-sentinel-border bg-[#030805] flex items-center justify-between hover:border-sentinel-green/50 transition-colors">
+                <div key={tx.id} className="p-3 rounded-lg border border-pg-border bg-pg-surface-2 flex items-center justify-between hover:border-pg-border-hover transition-colors">
                   <div>
-                    <div className="font-mono text-[10px] text-sentinel-text-muted mb-1">
+                    <div className="font-mono text-[11px] text-pg-text-muted mb-1">
                       {tx.transaction_id.slice(0, 12)}...
                     </div>
-                    <div className="font-sans text-[13px] font-bold text-sentinel-text-bright">
+                    <div className="font-sans text-[14px] font-semibold text-pg-text-bright">
                       ₹{tx.amount.toLocaleString()}
                     </div>
                   </div>

@@ -30,81 +30,76 @@ export default function SignupPage() {
   return (
     <div className="relative z-10 min-h-screen flex flex-col items-center justify-center p-6 lg:p-10 font-mono">
       {/* Auth Panel */}
-      <TerminalPanel className="w-full max-w-[480px] shrink-0">
-        <div className="flex items-center gap-2.5 mb-8">
-          <div className="w-[26px] h-[26px] flex items-center justify-center border border-sentinel-green text-[13px] text-sentinel-green">
-            ◈
+      <TerminalPanel className="w-full max-w-[480px] shrink-0 p-8 shadow-2xl">
+        <div className="flex items-center gap-3 mb-8">
+          <div className="w-10 h-10 rounded-xl bg-pg-accent-soft border border-pg-accent/30 flex items-center justify-center text-pg-accent">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           </div>
-          <div className="font-sans font-bold text-[17px] tracking-[0.02em] text-sentinel-text-bright">
-            PAY<span className="text-sentinel-green">GUARD</span>
+          <div className="font-sans font-bold text-2xl tracking-tight text-pg-text-white">
+            PayGuard
           </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="mb-4">
-            <label className="block text-[10px] tracking-[0.12em] text-sentinel-text-muted mb-1.5 before:content-['>_'] before:text-sentinel-green before:mr-1">
-              operator name
+            <label className="block text-[12px] font-medium text-pg-text-bright mb-1.5">
+              Full Name
             </label>
             <input
               type="text"
               required
-              placeholder="J. DOE"
-              className="w-full bg-sentinel-green-dim border border-sentinel-border p-3 text-sentinel-text-bright font-mono text-[13px] outline-none transition-all placeholder:text-[#2C4536] focus:bg-[rgba(0,255,150,0.07)] focus:border-sentinel-green focus:shadow-[0_0_0_3px_rgba(0,255,150,0.1),_0_0_20px_rgba(0,255,150,0.15)]"
+              placeholder="Jane Doe"
+              className="w-full bg-pg-surface-2 border border-pg-border rounded-lg p-3.5 text-pg-text-bright text-[14px] outline-none transition-all placeholder:text-pg-text-muted/50 focus:bg-pg-surface-2/80 focus:border-pg-accent focus:ring-2 focus:ring-pg-accent/20"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             />
           </div>
 
           <div className="mb-4">
-            <label className="block text-[10px] tracking-[0.12em] text-sentinel-text-muted mb-1.5 before:content-['>_'] before:text-sentinel-green before:mr-1">
-              operator id (email)
+            <label className="block text-[12px] font-medium text-pg-text-bright mb-1.5">
+              Email Address
             </label>
             <input
               type="email"
               required
               placeholder="new_user@payguard.ai"
-              className="w-full bg-sentinel-green-dim border border-sentinel-border p-3 text-sentinel-text-bright font-mono text-[13px] outline-none transition-all placeholder:text-[#2C4536] focus:bg-[rgba(0,255,150,0.07)] focus:border-sentinel-green focus:shadow-[0_0_0_3px_rgba(0,255,150,0.1),_0_0_20px_rgba(0,255,150,0.15)]"
+              className="w-full bg-pg-surface-2 border border-pg-border rounded-lg p-3.5 text-pg-text-bright text-[14px] outline-none transition-all placeholder:text-pg-text-muted/50 focus:bg-pg-surface-2/80 focus:border-pg-accent focus:ring-2 focus:ring-pg-accent/20"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             />
           </div>
 
-          <div className="mb-4">
-            <label className="block text-[10px] tracking-[0.12em] text-sentinel-text-muted mb-1.5 before:content-['>_'] before:text-sentinel-green before:mr-1">
-              access key
+          <div className="mb-6">
+            <label className="block text-[12px] font-medium text-pg-text-bright mb-1.5">
+              Password
             </label>
             <input
               type="password"
               required
               placeholder="••••••••••••••"
-              className="w-full bg-sentinel-green-dim border border-sentinel-border p-3 text-sentinel-text-bright font-mono text-[13px] outline-none transition-all placeholder:text-[#2C4536] focus:bg-[rgba(0,255,150,0.07)] focus:border-sentinel-green focus:shadow-[0_0_0_3px_rgba(0,255,150,0.1),_0_0_20px_rgba(0,255,150,0.15)]"
+              className="w-full bg-pg-surface-2 border border-pg-border rounded-lg p-3.5 text-pg-text-bright text-[14px] outline-none transition-all placeholder:text-pg-text-muted/50 focus:bg-pg-surface-2/80 focus:border-pg-accent focus:ring-2 focus:ring-pg-accent/20"
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             />
           </div>
 
           {error && (
-            <div className="text-sentinel-red text-[11px] mb-2 font-mono mt-4">
-              [ERROR] {error}
+            <div className="text-pg-red text-[13px] bg-pg-red-soft border border-pg-red/20 rounded-lg p-3 font-medium mb-2 mt-4">
+              {error}
             </div>
           )}
 
-          <div className="mt-6">
-            <TerminalButton type="submit" disabled={loading}>
-              {loading ? "PROVISIONING..." : "PROVISION ACCESS →"}
+          <div className="mt-8">
+            <TerminalButton type="submit" disabled={loading} className="w-full">
+              {loading ? "Creating account..." : "Sign Up"}
             </TerminalButton>
           </div>
         </form>
 
-        <div className="flex flex-col sm:flex-row justify-between mt-[18px] text-[10.5px] text-[#3B5C48] gap-2">
-          <span>AES-256 · JWT</span>
-          <span>clearance: <b className="text-sentinel-green">L1 ANALYST</b></span>
-        </div>
-
-        <div className="h-[1px] bg-sentinel-border mt-[22px] mb-[16px]" />
-
-        <div className="text-[10px] text-[#2C4536] tracking-[0.02em]">
-          Already provisioned? <Link to="/login" className="text-sentinel-green hover:underline">Authenticate Here</Link>
+        <div className="flex justify-center mt-6">
+          <div className="text-[13px] text-pg-text-muted font-sans">
+            Already have an account? <Link to="/login" className="text-pg-accent hover:text-pg-accent/80 font-medium ml-1">Sign in here</Link>
+          </div>
         </div>
       </TerminalPanel>
 

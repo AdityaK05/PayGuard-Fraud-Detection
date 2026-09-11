@@ -1,17 +1,22 @@
-import React from "react";
+import React from "react"
 
 interface TerminalButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  children: React.ReactNode;
+  children: React.ReactNode
+  variant?: "primary" | "danger" | "ghost"
 }
 
-export function TerminalButton({ children, className = "", ...props }: TerminalButtonProps) {
+export function TerminalButton({ children, variant = "primary", className = "", ...props }: TerminalButtonProps) {
+  const base = "inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-[13px] font-semibold tracking-wide transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+
+  const variants: Record<string, string> = {
+    primary: "bg-pg-accent text-white hover:bg-pg-accent/90 shadow-lg shadow-pg-accent/20 hover:shadow-pg-accent/30",
+    danger: "bg-pg-red text-white hover:bg-pg-red/90 shadow-lg shadow-pg-red/20",
+    ghost: "border border-pg-border text-pg-text hover:bg-pg-surface-2 hover:text-pg-text-bright hover:border-pg-border-hover",
+  }
+
   return (
-    <button 
-      className={`relative w-full mt-1.5 p-[13px] bg-sentinel-green text-[#05130C] font-sans font-bold text-[13px] tracking-[0.06em] uppercase cursor-pointer overflow-hidden border-none group ${className}`}
-      {...props}
-    >
-      <span className="relative z-10">{children}</span>
-      <div className="absolute top-0 -left-[60%] w-[40%] h-full bg-gradient-to-r from-transparent via-white/55 to-transparent animate-shimmer" />
+    <button className={`${base} ${variants[variant]} ${className}`} {...props}>
+      {children}
     </button>
-  );
+  )
 }
