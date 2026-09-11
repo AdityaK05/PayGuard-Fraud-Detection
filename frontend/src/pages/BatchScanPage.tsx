@@ -242,7 +242,11 @@ export default function BatchScanPage() {
     setLoading(true)
     setError("")
     try {
-      const { data } = await api.post("/predict/batch", { transactions: parsedData })
+      const { data } = await api.post(
+        "/predict/batch",
+        { transactions: parsedData },
+        { timeout: 180000 }
+      )
       setSummary(data.summary)
       setResults(data.results)
     } catch (err: any) {

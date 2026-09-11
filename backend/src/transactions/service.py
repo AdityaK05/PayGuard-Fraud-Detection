@@ -85,6 +85,9 @@ class TransactionService:
         self,
         user: User,
         data: dict,
+        commit: bool = True,
+        history_data: list[dict] | None = None,
+        compute_shap: bool | str = True,
     ) -> dict[str, Any]:
         """
         Full transaction pipeline:
@@ -136,37 +139,44 @@ class TransactionService:
                 else:
                     tx_data[k] = v
             
-            # Fetch user history (last 50 transactions to build context)
-            history_result = await self.db.execute(
-                select(Transaction)
-                .where(Transaction.user_id == user.id)
-                .order_by(Transaction.timestamp.asc())
-                .limit(50)
-            )
-            history_txs = history_result.scalars().all()
-            
-            history_data = []
-            for tx in history_txs:
-                history_data.append({
-                    "transaction_id": tx.transaction_id,
-                    "payment_type": tx.payment_type,
-                    "amount": tx.amount,
-                    "merchant_category": tx.merchant_category,
-                    "merchant_id": tx.merchant_id,
-                    "location_city": tx.location_city,
-                    "location_lat": tx.location_lat,
-                    "location_lng": tx.location_lng,
-                    "device_type": tx.device_type,
-                    "ip_address": tx.ip_address,
-                    "os_type": tx.os_type,
-                    "bank_name": tx.bank_name,
-                    "timestamp": tx.timestamp.isoformat() if tx.timestamp else None,
-                })
+            if history_data is None:
+                # Fetch user history (last 50 transactions to build context)
+                history_result = await self.db.execute(
+                    select(Transaction)
+                    .where(Transaction.user_id == user.id)
+                    .order_by(Transaction.timestamp.asc())
+                    .limit(50)
+                )
+                history_txs = history_result.scalars().all()
+                
+                history_data = []
+                for tx in history_txs:
+                    history_data.append({
+                        "transaction_id": tx.transaction_id,
+                        "payment_type": tx.payment_type,
+                        "amount": tx.amount,
+                        "merchant_category": tx.merchant_category,
+                        "merchant_id": tx.merchant_id,
+                        "location_city": tx.location_city,
+                        "location_lat": tx.location_lat,
+                        "location_lng": tx.location_lng,
+                        "device_type": tx.device_type,
+                        "ip_address": tx.ip_address,
+                        "os_type": tx.os_type,
+                        "bank_name": tx.bank_name,
+                        "timestamp": tx.timestamp.isoformat() if tx.timestamp else None,
+                    })
 
             result = predictor.predict(tx_data, history=history_data)
 
+            # Determine whether to compute SHAP
+            should_compute_shap = (
+                compute_shap is True
+                or (compute_shap == "auto" and (result.risk_level in ("fraud", "medium") or result.risk_score >= 20))
+            )
+
             # Get SHAP explanation
-            explainer = self._get_explainer()
+            explainer = self._get_explainer() if should_compute_shap else None
             if explainer is not None:
                 try:
                     import pandas as pd
@@ -292,8 +302,9 @@ class TransactionService:
         )
         self.db.add(log)
         
-        # Commit the transaction to save all records
-        await self.db.commit()
+        # Commit the transaction to save all records (if not in a batch)
+        if commit:
+            await self.db.commit()
 
         return {
             "transaction_id": tx_id,
@@ -460,15 +471,50 @@ class TransactionService:
         Returns:
             Dict with 'summary' (aggregate stats) and 'results' (per-row predictions).
         """
+        # Pre-fetch user history ONCE for the entire batch
+        history_result = await self.db.execute(
+            select(Transaction)
+            .where(Transaction.user_id == user.id)
+            .order_by(Transaction.timestamp.asc())
+            .limit(50)
+        )
+        history_txs = history_result.scalars().all()
+        history_data = [
+            {
+                "transaction_id": tx.transaction_id,
+                "payment_type": tx.payment_type,
+                "amount": tx.amount,
+                "merchant_category": tx.merchant_category,
+                "merchant_id": tx.merchant_id,
+                "location_city": tx.location_city,
+                "location_lat": tx.location_lat,
+                "location_lng": tx.location_lng,
+                "device_type": tx.device_type,
+                "ip_address": tx.ip_address,
+                "os_type": tx.os_type,
+                "bank_name": tx.bank_name,
+                "timestamp": tx.timestamp.isoformat() if tx.timestamp else None,
+            }
+            for tx in history_txs
+        ]
+
         results = []
         total_approved = 0
         total_blocked = 0
         total_flagged = 0
         risk_scores = []
 
-        for tx_data in transactions:
+        for idx, tx_data in enumerate(transactions):
             try:
-                result = await self.create_and_predict(user=user, data=tx_data)
+                # Force SHAP on first 3 transactions and auto (suspicious/flagged) for the rest
+                shap_mode = True if idx < 3 else "auto"
+                result = await self.create_and_predict(
+                    user=user,
+                    data=tx_data,
+                    commit=False,
+                    history_data=history_data,
+                    compute_shap=shap_mode,
+                )
                 results.append(result)
 
                 if result["prediction"] == "approved":
@@ -484,6 +530,13 @@ class TransactionService:
                 # If a single row fails, record it as an error but continue
                 print(f"  ⚠ Batch row failed: {e}")
                 continue
+
+        # Single atomic commit for all batch transactions and predictions
+        try:
+            await self.db.commit()
+        except Exception as e:
+            print(f"  ⚠ Batch DB commit failed: {e}")
+            await self.db.rollback()
 
         total = len(results)
         avg_risk = sum(risk_scores) / max(len(risk_scores), 1)
