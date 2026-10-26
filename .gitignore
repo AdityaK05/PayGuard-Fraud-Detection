@@ -37,7 +37,8 @@ frontend/dist/
 
 # OS
 .DS_Store
-Thumbs.db
+# Mock & Test statements
+*.pdf
 
 # Docker
 docker/data/

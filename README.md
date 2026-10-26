@@ -1,242 +1,264 @@
-# 🛡️ PayGuard AI – Enterprise Fraud Detection (Detailed README for Presentation)
+# 🛡️ PayGuard — AI-Powered Real-Time UPI Fraud Detection Platform
 
-## What this is (short)
-PayGuard AI is a real-time UPI transaction monitoring system that detects and blocks fraudulent transactions using a hybrid ML pipeline (unsupervised anomaly detection + supervised scoring) and a polished FastAPI + React UI for demonstration.
+[![Python](https://img.shields.io/badge/Python-3.12%2B-blue.svg)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115%2B-009688.svg)](https://fastapi.tiangolo.com/)
+[![React](https://img.shields.io/badge/React-18-61DAFB.svg)](https://react.dev/)
+[![XGBoost](https://img.shields.io/badge/XGBoost-v2.0%2B-FF6600.svg)](https://xgboost.readthedocs.io/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
----
-
-## What this README adds
-This expanded README documents the most important files you'll want to explain in a presentation:
-- ML model artifacts and their purpose
-- ML scripts (train / predict / evaluate / explain / preprocessing / feature engineering)
-- Backend files that wire models into the API
-- Frontend files to demonstrate the dashboard
-- Dev/ops files useful for live demos (Docker, compose, env)
-- Suggested talking points and a short demo script
+PayGuard is an enterprise-grade, high-throughput fraud prevention and anomaly detection platform built specifically for the Unified Payments Interface (UPI) transaction ecosystem. It combines **unsupervised isolation space anomaly detection**, **gradient boosted decision trees (XGBoost)**, **TreeSHAP forensic explainability**, and a **multi-factor continuous risk calibration engine** to intercept malicious payments in under 20 milliseconds.
 
 ---
 
-## Top-level project structure (quick)
+## 📊 Model Accuracy & Benchmark Metrics
+
+The production model artifacts (`ml/models/`) were evaluated against an out-of-sample stratified test set ($20\%$ holdout) following stratified 5-fold cross-validation.
+
+| Metric | Benchmark Score | Industry Reference Standard | Description |
+| :--- | :---: | :---: | :--- |
+| **Accuracy** | **98.25%** | $> 95.0\%$ | Overall proportion of correct predictions across benign & fraudulent streams |
+| **ROC-AUC** | **0.9964** | $> 0.950$ | Area under the Receiver Operating Characteristic curve; exceptional discriminatory power |
+| **Recall (Fraud Catch Rate)** | **95.00%** | $> 90.0\%$ | Fraction of all actual fraudulent events detected and intercepted |
+| **Precision** | **76.00%** | $> 70.0\%$ | Proportion of flagged transactions that are genuine attacks (low false-positive friction) |
+| **F1-Score** | **84.44%** | $> 80.0\%$ | Harmonic mean of Precision and Recall under imbalanced distribution |
+| **Inference Latency** | **< 20 ms** | $< 50\text{ ms}$ | Average end-to-end inference time per transaction |
+| **Active Contamination Rate** | **3.0%** | $1.0\% - 5.0\%$ | Baseline anomaly prior for unsupervised outlier bounding |
+
+> *Source: Canonical metrics serialized in [`ml/models/training_metrics.json`](ml/models/training_metrics.json).*
+
+---
+
+## 🔬 End-to-End Methodologies
+
+### 1. Data Pipeline & Imbalance Engineering
+* **Dataset Synthesis & Ingestion**:
+  UPI streams incorporate realistic multi-dimensional behaviors, including rapid micro-transactions (QR / P2M), household bill payments, peer-to-peer transfers (P2P), and synthetic attack vectors (credential stuffing, account takeover, nocturnal offshore drains, and crypto gateway hops).
+* **Imbalance Compensation**:
+  Fraud represents a minority class ($\approx 3\%$). To prevent model bias toward majority classes:
+  - **Stratified Partitioning**: 80/20 train-test split stratified on `is_fraud`.
+  - **Scale Positive Weight**: Dynamic loss weighting applied in XGBoost using:
+    $$\text{scale\_pos\_weight} = \frac{N_{\text{negative}}}{N_{\text{positive}}}$$
+    This penalizes false negatives proportionally without requiring synthetic oversampling artifacts like SMOTE that can distort spatial density.
+
+---
+
+### 2. Feature Engineering Pipeline (68 Total Dimensions)
+The feature engineering engine ([`ml/scripts/feature_engineering.py`](ml/scripts/feature_engineering.py)) processes raw transaction payloads into 68 engineered dimensions:
+
+1. **Temporal Signals**:
+   - `hour`: Hour of day (0–23) extracted from UTC timestamp.
+   - `is_late_night`: Binary indicator for transactions occurring in high-risk hours (11:00 PM – 4:00 AM).
+   - `is_unusual_hour_for_category`: Flags physical merchant categories (grocery, fuel, jewellery) operating during late night.
+2. **Monetary & Category Deviation**:
+   - `is_high_amount`: Binary flag for amounts exceeding ₹50,000.
+   - `amount_vs_category_avg`: Deviation ratio comparing current amount against historical category averages:
+     $$\text{ratio} = \frac{\text{Amount}}{\text{Mean}_{\text{category}}}$$
+3. **Behavioral & Identity History Counters**:
+   - `is_new_ip`: Flags previously unseen IP addresses for the authenticated user.
+   - `is_new_device`: Hardware/OS signature changes (e.g., unexpected mobile $\rightarrow$ web/emulator shift).
+   - `is_new_merchant` & `is_new_category`: Evaluates historical transaction interaction graph.
+4. **Merchant Risk Profiling**:
+   - `is_risky_merchant`: High-risk sector flags (crypto exchanges, offshore betting, unverified foreign merchants).
+5. **Categorical Encoding & Standardization**:
+   - Scikit-Learn `OneHotEncoder` transforms payment types, bank providers, merchant categories, and operating systems.
+   - `StandardScaler` scales amounts and geolocation coordinates.
+
+---
+
+### 3. Dual-Engine Hybrid ML Architecture
+
 ```
-.env.example
-docker-compose.yml
-frontend/              # React + Vite frontend (TypeScript)
-backend/               # FastAPI backend (Python)
-ml/                    # Models, training & inferencing scripts, dataset helpers
-LICENSE
-README.md
+                  ┌──────────────────────────────────────────────┐
+                  │          Incoming UPI Transaction            │
+                  └──────────────────────┬───────────────────────┘
+                                         │
+                                         ▼
+                  ┌──────────────────────────────────────────────┐
+                  │    Preprocessing & Feature Engineering (68)  │
+                  └──────────────────────┬───────────────────────┘
+                                         │
+                      ┌──────────────────┴──────────────────┐
+                      ▼                                     ▼
+        ┌───────────────────────────┐         ┌───────────────────────────┐
+        │     Isolation Forest      │         │   Feature Vector Align    │
+        │   (Unsupervised Anomaly)  │         │   (No Anomaly Column)     │
+        └─────────────┬─────────────┘         └─────────────┬─────────────┘
+                      │                                     │
+                      │ anomaly_score                       │
+                      └──────────────────┬──────────────────┘
+                                         │
+                                         ▼
+                  ┌──────────────────────────────────────────────┐
+                  │       XGBoost Supervised Classifier          │
+                  │   (Combines 67 Features + Anomaly Score)     │
+                  └──────────────────────┬───────────────────────┘
+                                         │
+                                         ▼
+                  ┌──────────────────────────────────────────────┐
+                  │   TreeSHAP Explainer (Feature Attribution)   │
+                  └──────────────────────┬───────────────────────┘
+                                         │
+                                         ▼
+                  ┌──────────────────────────────────────────────┐
+                  │   Calibrated Continuous Risk Engine (0-100)  │
+                  └──────────────────────┬───────────────────────┘
+                                         │
+                ┌────────────────────────┼────────────────────────┐
+                ▼                        ▼                        ▼
+        Risk Score < 25%         25% ≤ Risk < 50%          Risk Score ≥ 50%
+          [ Approved ]           [ Review Queue ]            [ Blocked ]
+```
+
+#### Step A: Unsupervised Outlier Detection (Isolation Forest)
+- **Model**: `IsolationForest(n_estimators=100, contamination=0.03, random_state=42)`
+- Evaluates multidimensional isolation depth without relying on ground-truth labels.
+- Calculates continuous `anomaly_score`: positive values denote normal transaction clusters; negative values indicate isolation outliers.
+
+#### Step B: Supervised Gradient Boosting (XGBoost)
+- **Model**: `xgb.XGBClassifier` with:
+  - `n_estimators = 100`
+  - `learning_rate = 0.05`
+  - `max_depth = 5`
+  - `reg_alpha = 5` (L1 regularizer)
+  - `reg_lambda = 5` (L2 regularizer)
+  - `subsample = 0.8`, `colsample_bytree = 0.8`
+  - `early_stopping_rounds = 10`
+- Receives the 67 engineered features **plus** the Isolation Forest `anomaly_score` as an enriched input dimension, providing both supervised precision and unsupervised outlier awareness.
+
+---
+
+### 4. Explainable AI (TreeSHAP)
+- Utilizes `shap.TreeExplainer` on the ensemble trees to generate exact Shapley feature attributions.
+- For every decision, PayGuard provides exact positive/negative contributions for top drivers (e.g., amount vs. category baseline, nocturnal timing, new device signature, offshore IP).
+
+---
+
+### 5. Multi-Factor Continuous Risk Calibration
+
+Raw tree probabilities tend to cluster into narrow bands. PayGuard translates model outputs into a continuous, realistic risk index ($0 - 100$) using calibrated multi-factor weighting:
+
+$$\text{Composite Risk} = R_{\text{base}} + \Delta_{\text{anomaly}} + \Delta_{\text{amount}} + \Delta_{\text{category}} + \Delta_{\text{temporal}} + \Delta_{\text{geo}}$$
+
+1. **Base Probability Curve ($R_{\text{base}}$)**:
+   - Safe Zone ($P < 0.20$): Maps smoothly from $2\%$ to $14\%$.
+   - Review Zone ($0.20 \le P < 0.50$): Maps from $25\%$ to $48\%$.
+   - Fraud Zone ($P \ge 0.50$): Maps from $58\%$ to $92\%$.
+2. **Continuous Anomaly Offset ($\Delta_{\text{anomaly}}$)**:
+   - For typical transactions ($\text{score} \ge 0$): Provides subtle baseline relief (up to $-2.5\%$).
+   - For outliers ($\text{score} < 0$): Dynamically scales up to $+20.0\%$.
+3. **Logarithmic Amount Exposure ($\Delta_{\text{amount}}$)**:
+   $$\Delta_{\text{amount}} = \min\left(6.0, \max\left(0, 2.0 \cdot (\log_{10}(\text{Amount}) - 1.5)\right)\right)$$
+4. **Category Ratio Deviation ($\Delta_{\text{category}}$)**:
+   $$\Delta_{\text{category}} = \min\left(5.0, \max\left(0, 1.5 \cdot (\text{Ratio} - 1.0)\right)\right)$$
+5. **Temporal Penalty ($\Delta_{\text{temporal}}$)**:
+   $+4.0\%$ if the transaction takes place between 11:00 PM and 4:00 AM.
+6. **Geolocation / Untrusted IP ($\Delta_{\text{geo}}$)**:
+   $+6.0\%$ for offshore/foreign locations or high-risk IP ranges.
+
+#### Decision Boundaries:
+* **Approved (`safe`)**: Risk Score $< 25\%$ (natural distribution between $2\%$ and $22\%$).
+* **Review Queue (`medium`)**: Risk Score $25\% - 49\%$ (flagged for human compliance review).
+* **Blocked (`fraud`)**: Risk Score $\ge 50\%$ or $P(\text{fraud}) \ge 0.50$ (immediate rejection, $60\% - 99\%$).
+
+---
+
+## 🏗️ System Architecture
+
+```
+PayGuard/
+├── backend/                   # FastAPI Backend
+│   ├── src/
+│   │   ├── admin/             # Analytics, review queue, and audit trails
+│   │   ├── auth/              # JWT auth and security dependencies
+│   │   ├── core/              # Config, async SQLAlchemy database engine
+│   │   ├── transactions/      # Predict, batch scan, router & service logic
+│   │   └── main.py            # FastAPI factory, rate limiter, lifecycle hooks
+│   └── requirements.txt
+│
+├── frontend/                  # React + TypeScript + Vite Frontend
+│   ├── src/
+│   │   ├── components/        # iOS Liquid Glass UI cards, badges, logo, shell
+│   │   ├── pages/             # Dashboard, BatchScan, History, ReviewQueue, Settings
+│   │   └── index.css          # Design system tokens and glassmorphism styles
+│   └── package.json
+│
+├── ml/                        # ML Engineering & Artifacts
+│   ├── datasets/              # Dataset generators and feature vectors
+│   ├── models/                # Serialized models (.pkl) & training_metrics.json
+│   └── scripts/               # train.py, predict.py, evaluate.py, explain.py
+│
+└── docker-compose.yml         # Containerized production deployment
 ```
 
 ---
 
-## ML artifacts (ml/models)
-Explain these files on a slide (what they are, why they matter):
+## 🚀 Quickstart & Local Setup
 
-- ml/models/IsolationForest.pkl
-  - Purpose: Unsupervised anomaly detector producing an `anomaly_score` per transaction.
-  - Talk points: Used to detect rare or outlier transaction patterns (velocity, unusual merchant/location). Useful to show "anomaly_score" visualized in the dashboard.
+### Prerequisites
+* Python 3.12+
+* Node.js 18+ & npm
+* Git
 
-- ml/models/XGBoost.pkl
-  - Purpose: Supervised classifier that outputs `fraud_probability` (0.0–1.0).
-  - Talk points: Trained on labeled transactions; combines engineered features and the anomaly score. Good to show feature importances or a sample prediction.
-
-- ml/models/Preprocessor.pkl
-  - Purpose: Serialization of the feature transformation pipeline (categorical encoders, imputation, pipeline steps).
-  - Talk points: Ensures training and inference use identical feature transforms.
-
-- ml/models/Scaler.pkl
-  - Purpose: Numeric feature scaler (e.g., StandardScaler) used to normalize numeric inputs.
-  - Talk points: Explain why scaling matters for distance-based models and tree-based pipelines where consistent ranges simplify feature interactions.
-
-- ml/models/Encoder.pkl
-  - Purpose: Encodes categorical features (merchant categories, location buckets, etc.).
-  - Talk points: Used to convert categories to numeric form (one-hot, ordinal, or target encoding depending on pipeline).
-
-- ml/models/feature_columns.pkl
-  - Purpose: Canonical list / order of features expected by the model.
-  - Talk points: Useful to show the exact features the model uses and to verify alignment between frontend/backend/ML code.
-
-- ml/models/training_metrics.json
-  - Purpose: Training-time metrics (ROC AUC, precision, recall, thresholds) and possibly cross-validation stats.
-  - Talk points: Use this to show model performance and to justify thresholds used by the decision engine.
-
----
-
-## Important ML scripts (ml/scripts)
-Each can be a slide with sample command(s):
-
-- ml/scripts/generate_dataset.py
-  - What: Builds or synthesizes the dataset used for training (parsing raw logs, labeling rules).
-  - Use in demo: Show how the dataset was generated or a small sample of training rows.
-
-- ml/scripts/preprocessing.py
-  - What: Prepares raw transaction data (cleaning, imputation, time conversions).
-  - Talk points: Show before/after examples (raw vs cleaned rows).
-
-- ml/scripts/feature_engineering.py
-  - What: Computes rolling and behavioral features (e.g., tx_velocity_1h, behavior_deviation, location_mismatch).
-  - Talk points: Explain real-time feature computation: how historical transactions are aggregated and used for a single prediction.
-
-- ml/scripts/train.py
-  - What: Orchestrates training for the Isolation Forest and XGBoost models and saves artifacts to ml/models.
-  - Sample run:
-    ```bash
-    cd ml
-    python -m pip install -r requirements.txt
-    python scripts/train.py --config config.yaml
-    ```
-  - Talk points: Mention hyperparameters, validation split, and artifact outputs.
-
-- ml/scripts/evaluate.py
-  - What: Runs evaluation on held-out data and writes metrics to training_metrics.json.
-  - Talk points: Use for slides to show ROC curve, confusion matrix, precision@k.
-
-- ml/scripts/predict.py
-  - What: Lightweight CLI / script to load saved artifacts and perform a prediction on a supplied transaction JSON or CSV row.
-  - Sample run:
-    ```bash
-    python scripts/predict.py --input sample_tx.json
-    ```
-  - Talk points: Use during demo to show a transaction going from raw -> features -> anomaly score -> fraud probability -> decision.
-
-- ml/scripts/explain.py
-  - What: Generates per-prediction explanations (SHAP) for the XGBoost model.
-  - Talk points: Show a SHAP force plot or bar chart to justify why the model labeled a transaction risky.
-
----
-
-## Backend (backend/src) — files to highlight
-These are the files you'll reference when explaining how ML integrates with the API.
-
-- backend/src/main.py
-  - Role: FastAPI application factory, startup/shutdown lifecycle, DB initialization, ML model preloading (optional).
-  - Quote to show on slide: It pre-loads ML models at startup via TransactionService._get_predictor() and registers routers for auth, users, transactions and admin.
-
-- backend/src/core/config.py
-  - Role: Centralized application settings (APP_NAME, APP_VERSION, DB URL, CORS origins, secret keys).
-  - Talk points: Show how environment variables from .env.example map to runtime behavior.
-
-- backend/src/core/database.py
-  - Role: Database initialization (SQLite / SQLAlchemy models). Explain how historical transaction queries are executed to compute rolling features.
-
-- backend/src/transactions/
-  - Files: router, service, schemas, models (likely)
-  - Role: TransactionService loads ML models, computes real-time features using DB queries, calls the predictor, applies decision engine (risk -> block/approve).
-  - Talk points: Emphasize separation: Router (HTTP), Service (business logic + ML), DB models (persistence).
-
-- backend/src/auth, backend/src/users, backend/src/admin
-  - Role: Authentication, user management, and admin utilities (seed demo admin user).
-  - Talk points: Show how auth protects sensitive endpoints and how admin routes can be used for seeding or model reloading (if implemented).
-
----
-
-## Frontend (frontend/) — files to highlight in presentation
-- frontend/src/
-  - Role: React components and pages for the dashboard. Show the real-time transaction feed, detail modal with model explanation, and charts.
-
-- frontend/index.html & public/
-  - Role: Static assets and demo screenshots used in the presentation.
-
-- frontend/package.json, vite.config.ts
-  - Role: Build/run scripts for the demo. Explain how to run locally (npm install && npm run dev).
-
-- What to demo on screen:
-  - The real-time dashboard (transactions stream)
-  - A single transaction detail view showing:
-    - anomaly_score
-    - fraud_probability
-    - SHAP explanation (from explain.py / backend explain endpoint if wired up)
-  - Use the sample transaction generator to create suspicious / benign transactions.
-
----
-
-## Dev / Ops & Demo helpers
-- docker-compose.yml
-  - Role: Compose file to run backend + frontend (and DB) for a reproducible demo.
-  - Demo tip: Use docker-compose up to show a quick, stable demo environment.
-
-- backend/Dockerfile, frontend/Dockerfile
-  - Role: Container definitions for production-like demo.
-
-- .env.example
-  - Role: Example environment variables (DB path, secret keys, model reload flags).
-  - Demo tip: Show which variables are important for demo mode (e.g., seeding admin user, enabling dev logging).
-
-- backend/requirements.txt, ml/requirements.txt, frontend/package.json
-  - Role: Reproducible dependency lists. Mention major libraries (FastAPI, SQLAlchemy, XGBoost, scikit-learn, SHAP, React, Vite).
-
----
-
-## How to run a short local demo (commands)
-1. Start backend:
+### 1. Backend Setup
 ```bash
 cd backend
 python -m venv .venv
-# On Windows:    
-.venv\Scripts\activate
-# On macOS/Linux:
-# source .venv/bin/activate
-pip install -r requirements.txt
-python -m uvicorn src.main:app --reload --port 8000
-```
 
-2. Start frontend:
+# Windows:
+.\.venv\Scripts\activate
+# Linux/macOS:
+# source .venv/bin/activate
+
+pip install -r requirements.txt
+python -m uvicorn src.main:app --host 127.0.0.1 --port 8000 --reload
+```
+API Documentation will be accessible at: `http://localhost:8000/docs`
+
+### 2. Frontend Setup
 ```bash
 cd frontend
 npm install
 npm run dev
-# Open http://localhost:5173
 ```
+Client Application will run at: `http://localhost:5173`
 
-3. (Optional) Run a local prediction using the ML CLI:
+### 3. Demo Credentials
+* **Admin Login**: `admin@payguard.ai`
+* **Password**: `Admin@12345`
+
+---
+
+## 🧪 Model Retraining & Evaluation
+
+To re-run the end-to-end ML pipeline:
+
 ```bash
 cd ml
-python -m pip install -r requirements.txt
-python scripts/predict.py --input example_tx.json
+pip install -r requirements.txt
+
+# 1. Generate synthesized UPI transaction stream
+python scripts/generate_dataset.py
+
+# 2. Extract features and build enriched matrices
+python scripts/feature_engineering.py
+
+# 3. Train Isolation Forest and XGBoost with scale_pos_weight
+python scripts/train.py
+
+# 4. Generate evaluation plots (Confusion Matrix, ROC, Precision-Recall)
+python scripts/evaluate.py
 ```
-
-4. (Optional) Use docker-compose for combined demo:
-```bash
-docker-compose up --build
-```
+Evaluation visualizations will be generated in `ml/models/evaluation/`.
 
 ---
 
-## Presentation talking points (slide-by-slide suggestions)
-1. Problem + Impact (why UPI fraud detection matters)
-2. Architecture diagram (frontend, backend, ML pipeline, DB)
-3. ML pipeline overview (feature engineering → isolation forest → XGBoost → decision engine)
-4. Artifact slide: show each file in ml/models and explain its role (Encoder, Scaler, Preprocessor, IsolationForest, XGBoost)
-5. Training & Metrics: show training_metrics.json and sample ROC / precision recall
-6. Explainability: show an explain.py output (SHAP) and how that appears in the UI
-7. Live demo: start backend + frontend, push a sample transaction, show model outputs and decision
-8. Ops: docker-compose, env, and how to reload models in production (if applicable)
+## 🔒 Security & Compliance
+* **Asynchronous Database Sessions**: Built on SQLAlchemy AsyncIO with aiosqlite / asyncpg.
+* **Rate Limiting**: Configured using SlowAPI to prevent denial-of-service and brute-force attacks on prediction endpoints.
+* **Password Hashing**: Bcrypt with salted rounds.
+* **Stateless Tokens**: JWT Bearer tokens with configurable expiration.
 
 ---
 
-## Short demo script (3–5 minutes)
-- Start servers (2 min)
-- Trigger a high-risk transaction via ML CLI or frontend (30s)
-- Show the dashboard transaction detail: anomaly_score, fraud_probability, SHAP explanation (1 min)
-- Summarize decision threshold and how false positives are handled (30s)
-
----
-
-## Slide resource checklist (files to include in slides)
-- ml/models/training_metrics.json (metrics slide)
-- ml/scripts/explain.py output (explainability slide)
-- ml/models/feature_columns.pkl (feature list)
-- backend/src/main.py (architectural slide, lifecycle & model preload)
-- docker-compose.yml (ops & reproducibility slide)
-- Frontend screenshots from frontend/public (UI slide)
-
----
-
-## Final notes for the presenter
-- When discussing models, emphasize both components: the Isolation Forest (captures anomalies) and the XGBoost model (predicts probability conditioned on engineered features).
-- Demonstrate one benign and one malicious-looking transaction so audience sees how the anomaly score and fraud probability behave differently.
-- If asked about model updates: mention retraining via ml/scripts/train.py and redeploying artifacts in ml/models (or creating a model-reload endpoint in admin routes).
-
----
-
-Made with ❤️ — Use this README to replace or augment the repository README so your presentation has clear, file-level explanations and an actionable demo plan.
+## 📜 License
+Distributed under the MIT License. See [`LICENSE`](LICENSE) for details.

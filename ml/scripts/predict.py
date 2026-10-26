@@ -3,6 +3,7 @@ PayGuard ML – Real-Time Prediction Module
 """
 
 import os
+import math
 import joblib
 import pandas as pd
 from typing import Optional
@@ -14,7 +15,7 @@ from preprocessing import DataPreprocessor
 from feature_engineering import FeatureEngineer
 
 MODELS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "models"))
-DEFAULT_BLOCK_THRESHOLD = 70
+DEFAULT_BLOCK_THRESHOLD = 50
 
 @dataclass
 class PredictionResult:
@@ -90,13 +91,67 @@ class FraudPredictor:
         fraud_probability = float(self.xgb_model.predict_proba(X_enriched)[0, 1])
         confidence = float(max(self.xgb_model.predict_proba(X_enriched)[0]))
         
-        xgb_component = fraud_probability * 100 * 0.85
-        normalized_anomaly = max(0, min(1, (0.5 - anomaly_score)))
-        if_component = normalized_anomaly * 100 * 0.15
-        risk_score = max(0, min(100, int(round(xgb_component + if_component))))
-        
-        risk_level = "safe" if risk_score <= 30 else "medium" if risk_score <= 60 else "fraud"
-        prediction = "blocked" if risk_score >= self.block_threshold else "approved"
+        # Multi-factor calibrated continuous risk score (0 - 100)
+        # 1. Base probability mapping
+        if fraud_probability < 0.20:
+            # Safe zone: maps base from 2% to 14%
+            base_risk = 2.0 + (fraud_probability / 0.20) * 12.0
+        elif fraud_probability < 0.50:
+            # Review zone: maps base from 25% to 48%
+            base_risk = 25.0 + ((fraud_probability - 0.20) / 0.30) * 23.0
+        else:
+            # Fraud zone: maps base from 58% to 92%
+            base_risk = 58.0 + ((fraud_probability - 0.50) / 0.50) * 34.0
+
+        # 2. Continuous anomaly factor from Isolation Forest
+        if anomaly_score < 0:
+            anom_factor = min(20.0, abs(anomaly_score) * 150.0)
+        else:
+            # Routine typical transactions receive small healthy risk relief
+            anom_factor = -min(2.5, anomaly_score * 15.0)
+
+        # 3. Transaction magnitude & category ratio nuance
+        amt = float(transaction.get("amount", 500) or 500)
+        amt_factor = min(6.0, max(0.0, (math.log10(max(10.0, amt)) - 1.5) * 2.0))
+
+        cat_ratio = float(df_features_all["amount_vs_category_avg"].iloc[-1]) if "amount_vs_category_avg" in df_features_all.columns else 1.0
+        cat_factor = min(5.0, max(0.0, (cat_ratio - 1.0) * 1.5))
+
+        # 4. Temporal factor (late night 23:00 - 04:00)
+        is_late = int(df_features_all["is_late_night"].iloc[-1]) if "is_late_night" in df_features_all.columns else 0
+        hour_factor = 4.0 if is_late else 0.0
+
+        # 5. Geolocation / untrusted IP factor
+        city_str = str(transaction.get("location_city", "")).lower()
+        is_foreign = ("dubai" in city_str or "foreign" in city_str or "unknown" in city_str or "russia" in city_str or "moscow" in city_str)
+        geo_factor = 6.0 if is_foreign else 0.0
+
+        # Combined composite risk
+        composite = base_risk + anom_factor + amt_factor + cat_factor + hour_factor + geo_factor
+
+        # Strict tier bounds to avoid false classifications
+        if fraud_probability < 0.05:
+            # Definitely safe tier (2% - 22% realistic continuous variation)
+            risk_score = int(round(min(22.0, max(2.0, composite))))
+        elif fraud_probability < 0.25:
+            # Low-to-moderate tier (8% - 38%)
+            risk_score = int(round(min(38.0, max(8.0, composite))))
+        elif fraud_probability < 0.50:
+            # Borderline / review tier (25% - 49%)
+            risk_score = int(round(min(49.0, max(25.0, composite))))
+        else:
+            # Blocked / fraud tier (55% - 99% realistic continuous variation)
+            risk_score = int(round(min(99.0, max(55.0, composite))))
+
+        if risk_score >= self.block_threshold or fraud_probability >= 0.50:
+            risk_level = "fraud"
+            prediction = "blocked"
+        elif risk_score >= 25 or fraud_probability >= 0.25:
+            risk_level = "medium"
+            prediction = "review"
+        else:
+            risk_level = "safe"
+            prediction = "approved"
         
         return PredictionResult(
             transaction_id=tx_id, anomaly_score=anomaly_score, is_anomaly=is_anomaly,

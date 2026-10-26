@@ -26,96 +26,69 @@
   --color-pg-text-bright: var(--pg-text-bright);
   --color-pg-text-white: var(--pg-text-white);
 
-  --font-mono: "JetBrains Mono", monospace;
-  --font-sans: "Inter", "Space Grotesk", system-ui, sans-serif;
-
-  --animate-blink: blink 1.2s steps(2) infinite;
-  --animate-fade-in: fadeIn 0.4s ease-out forwards;
-  --animate-slide-up: slideUp 0.4s ease-out forwards;
-  --animate-pulse-soft: pulseSoft 3s ease-in-out infinite;
-
-  @keyframes blink {
-    50% { opacity: 0; }
-  }
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-  @keyframes slideUp {
-    from { opacity: 0; transform: translateY(12px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  @keyframes pulseSoft {
-    0%, 100% { opacity: 0.6; }
-    50% { opacity: 1; }
-  }
-
-  /* Legacy aliases */
-  --color-sentinel-base: var(--color-pg-base);
-  --color-sentinel-green: var(--color-pg-accent);
-  --color-sentinel-green-dim: var(--color-pg-accent-soft);
-  --color-sentinel-border: var(--color-pg-border);
-  --color-sentinel-border-focus: var(--color-pg-border-active);
-  --color-sentinel-amber: var(--color-pg-amber);
-  --color-sentinel-red: var(--color-pg-red);
-  --color-sentinel-text: var(--color-pg-text);
-  --color-sentinel-text-muted: var(--color-pg-text-muted);
-  --color-sentinel-text-bright: var(--color-pg-text-bright);
+  --font-mono: "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", "Helvetica Neue", sans-serif;
 }
 
 @layer base {
   :root {
-    /* Creamish / Off-white light theme */
-    --pg-base: #faf9f6; 
-    --pg-surface: #ffffff;
-    --pg-surface-2: #f4f1ea; 
-    --pg-surface-3: #eae5db;
-    --pg-border: rgba(139, 115, 85, 0.15);
-    --pg-border-hover: rgba(139, 115, 85, 0.25);
-    --pg-border-active: rgba(217, 119, 6, 0.40);
+    /* iOS Frosted Light Theme */
+    --pg-base: #f6f8fc;
+    --pg-surface: rgba(255, 255, 255, 0.72);
+    --pg-surface-2: rgba(255, 255, 255, 0.88);
+    --pg-surface-3: #f0f3fa;
+    --pg-border: rgba(226, 232, 240, 0.75);
+    --pg-border-hover: rgba(148, 163, 184, 0.5);
+    --pg-border-active: rgba(99, 102, 241, 0.6);
 
-    --pg-accent: #d97706; /* Amber/Gold accent */
-    --pg-accent-soft: rgba(217, 119, 6, 0.10);
-    --pg-accent-glow: rgba(217, 119, 6, 0.20);
+    --pg-accent: #4f46e5;
+    --pg-accent-soft: rgba(79, 70, 229, 0.08);
+    --pg-accent-glow: rgba(79, 70, 229, 0.22);
 
-    --pg-green: #16a34a;
-    --pg-green-soft: rgba(22, 163, 74, 0.10);
-    --pg-red: #dc2626;
-    --pg-red-soft: rgba(220, 38, 38, 0.10);
-    --pg-amber: #d97706;
-    --pg-amber-soft: rgba(217, 119, 6, 0.10);
+    --pg-green: #10b981;
+    --pg-green-soft: rgba(16, 185, 129, 0.10);
+    --pg-red: #f43f5e;
+    --pg-red-soft: rgba(244, 63, 94, 0.10);
+    --pg-amber: #f59e0b;
+    --pg-amber-soft: rgba(245, 158, 11, 0.10);
 
-    --pg-text: #5c5346;
-    --pg-text-muted: #857d71;
-    --pg-text-bright: #362f27;
-    --pg-text-white: #1c1814;
+    --pg-text: #475569;
+    --pg-text-muted: #94a3b8;
+    --pg-text-bright: #1e293b;
+    --pg-text-white: #0f172a;
+
+    --glass-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.04), 0 20px 40px -15px rgba(0, 0, 0, 0.03);
+    --glass-specular: inset 0 1px 1px 0 rgba(255, 255, 255, 0.8);
   }
 
   .dark {
-    /* Deep dark theme */
-    --pg-base: #0b0e14;
-    --pg-surface: #111520;
-    --pg-surface-2: #171c2a;
-    --pg-surface-3: #1e2436;
-    --pg-border: rgba(148, 163, 184, 0.10);
-    --pg-border-hover: rgba(148, 163, 184, 0.20);
-    --pg-border-active: rgba(99, 102, 241, 0.40);
+    /* iOS Liquid Glass Dark Theme - Ultra Luxury Deep Sapphire */
+    --pg-base: #07090e;
+    --pg-surface: rgba(15, 20, 32, 0.65);
+    --pg-surface-2: rgba(22, 29, 46, 0.75);
+    --pg-surface-3: rgba(30, 41, 65, 0.85);
+    --pg-border: rgba(255, 255, 255, 0.08);
+    --pg-border-hover: rgba(255, 255, 255, 0.18);
+    --pg-border-active: rgba(99, 102, 241, 0.5);
 
-    --pg-accent: #6366f1; /* Indigo accent */
+    --pg-accent: #6366f1;
     --pg-accent-soft: rgba(99, 102, 241, 0.15);
-    --pg-accent-glow: rgba(99, 102, 241, 0.25);
+    --pg-accent-glow: rgba(99, 102, 241, 0.35);
 
-    --pg-green: #22c55e;
-    --pg-green-soft: rgba(34, 197, 94, 0.12);
-    --pg-red: #ef4444;
-    --pg-red-soft: rgba(239, 68, 68, 0.12);
-    --pg-amber: #f59e0b;
-    --pg-amber-soft: rgba(245, 158, 11, 0.12);
+    --pg-green: #34d399;
+    --pg-green-soft: rgba(52, 211, 153, 0.14);
+    --pg-red: #fb7185;
+    --pg-red-soft: rgba(251, 113, 133, 0.14);
+    --pg-amber: #fbbf24;
+    --pg-amber-soft: rgba(251, 191, 36, 0.14);
 
     --pg-text: #94a3b8;
-    --pg-text-muted: #475569;
+    --pg-text-muted: #64748b;
     --pg-text-bright: #e2e8f0;
-    --pg-text-white: #f8fafc;
+    --pg-text-white: #ffffff;
+
+    --glass-shadow: 0 12px 40px -10px rgba(0, 0, 0, 0.5), 0 24px 60px -20px rgba(0, 0, 0, 0.4);
+    --glass-specular: inset 0 1px 1px 0 rgba(255, 255, 255, 0.12);
   }
 
   *, *::before, *::after {
@@ -129,15 +102,16 @@
   }
 
   body {
-    background: var(--color-pg-base);
-    color: var(--color-pg-text);
+    background-color: var(--pg-base);
+    color: var(--pg-text);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
+    letter-spacing: -0.011em;
   }
 
-  /* Custom Scrollbar */
+  /* Custom Smooth Scrollbar */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -146,10 +120,105 @@
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: rgba(148, 163, 184, 0.15);
-    border-radius: 3px;
+    background: rgba(148, 163, 184, 0.2);
+    border-radius: 9999px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(148, 163, 184, 0.25);
+    background: rgba(148, 163, 184, 0.35);
   }
+}
+
+/* ── iOS Glass Utility Classes ────────────────────────────────────── */
+
+.ios-glass {
+  background: var(--pg-surface);
+  backdrop-filter: blur(28px) saturate(190%);
+  -webkit-backdrop-filter: blur(28px) saturate(190%);
+  border: 1px solid var(--pg-border);
+  box-shadow: var(--glass-shadow), var(--glass-specular);
+  border-radius: 1.25rem;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ios-glass-card {
+  background: var(--pg-surface);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid var(--pg-border);
+  box-shadow: var(--glass-shadow), var(--glass-specular);
+  border-radius: 1rem;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ios-glass-card:hover {
+  border-color: var(--pg-border-hover);
+  transform: translateY(-1px);
+}
+
+.ios-glass-pill {
+  background: var(--pg-surface-2);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--pg-border);
+  border-radius: 9999px;
+  transition: all 0.2s ease;
+}
+
+.ios-glass-input {
+  background: var(--pg-surface-2);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--pg-border);
+  border-radius: 0.75rem;
+  box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ios-glass-input:focus {
+  border-color: var(--pg-accent);
+  box-shadow: 0 0 0 3px var(--pg-accent-soft), var(--glass-specular);
+  outline: none;
+}
+
+.ios-glass-button {
+  background: var(--pg-surface-2);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--pg-border);
+  box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.04), var(--glass-specular);
+  border-radius: 0.75rem;
+  font-weight: 500;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  user-select: none;
+}
+
+.ios-glass-button:hover {
+  background: var(--pg-surface-3);
+  border-color: var(--pg-border-hover);
+}
+
+.ios-glass-button:active {
+  transform: scale(0.98);
+}
+
+.ios-glass-button-primary {
+  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 14px 0 rgba(79, 70, 229, 0.35), inset 0 1px 1px 0 rgba(255, 255, 255, 0.3);
+  border-radius: 0.75rem;
+  font-weight: 600;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  user-select: none;
+}
+
+.ios-glass-button-primary:hover {
+  box-shadow: 0 6px 20px 0 rgba(79, 70, 229, 0.45), inset 0 1px 1px 0 rgba(255, 255, 255, 0.4);
+  transform: translateY(-1px);
+}
+
+.ios-glass-button-primary:active {
+  transform: scale(0.98);
 }

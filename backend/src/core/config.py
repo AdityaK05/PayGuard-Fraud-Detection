@@ -44,7 +44,7 @@ class Settings(BaseSettings):
 
     # ── ML Models ────────────────────────────────────────────────────
     ML_MODELS_DIR: str = "../ml/models"
-    FRAUD_BLOCK_THRESHOLD: int = 70
+    FRAUD_BLOCK_THRESHOLD: int = 50
 
     # ── Rate Limiting ────────────────────────────────────────────────
     RATE_LIMIT: str = "100/minute"

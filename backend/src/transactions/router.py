@@ -31,7 +31,7 @@ router = APIRouter(tags=["Transactions"])
     response_model=PredictionResultResponse,
     summary="Submit transaction for fraud prediction",
 )
-@limiter.limit("10/minute")
+@limiter.limit("60/minute")
 async def predict_transaction(
     request: Request,
     body: TransactionCreate,

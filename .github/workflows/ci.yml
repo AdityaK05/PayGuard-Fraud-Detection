@@ -75,4 +75,6 @@ jobs:
     - name: Verify ML Scripts
       run: |
         python ml/scripts/generate_dataset.py
+        python ml/scripts/preprocessing.py
+        python ml/scripts/feature_engineering.py
         python ml/scripts/train.py
