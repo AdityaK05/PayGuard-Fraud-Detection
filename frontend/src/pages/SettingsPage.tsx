@@ -22,27 +22,28 @@ export default function SettingsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[12px] font-semibold text-pg-accent tracking-wide uppercase">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#3b82f6]" />
+            <span className="text-[11px] font-semibold text-[#3b82f6] tracking-wider uppercase">
               Engine Governance
             </span>
-            <span className="text-pg-text-muted">·</span>
-            <span className="text-[12px] text-pg-text-muted">System Policies</span>
+            <span className="text-neutral-600">·</span>
+            <span className="text-[11px] text-neutral-400 font-medium">System Policies</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-pg-text-white">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
             System & Model Configuration
           </h1>
-          <p className="text-[13px] text-pg-text-muted mt-1">
+          <p className="text-[13px] text-neutral-400 mt-1">
             Configure risk decision boundaries, automated rules, and security clearance.
           </p>
         </div>
 
         <button
           onClick={handleSave}
-          className="ios-glass-button-primary px-5 py-2 text-[13px] flex items-center gap-2"
+          className="ios-glass-button-primary px-4 py-1.5 text-[12px] flex items-center gap-2 cursor-pointer"
         >
           {saved ? (
             <>
-              <Check className="w-4 h-4" />
+              <Check className="w-3.5 h-3.5" strokeWidth={1.75} />
               <span>Saved Successfully</span>
             </>
           ) : (
@@ -51,69 +52,69 @@ export default function SettingsPage() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Profile Card */}
         <div className="lg:col-span-4 flex flex-col gap-6">
           <GlassCard className="flex flex-col gap-5">
-            <div className="flex items-center gap-3 pb-4 border-b border-pg-border/50">
-              <div className="w-10 h-10 rounded-xl bg-pg-accent-soft text-pg-accent flex items-center justify-center font-bold text-lg">
-                <User className="w-5 h-5" />
+            <div className="flex items-center gap-3 pb-4 border-b border-white/[0.06]">
+              <div className="w-9 h-9 rounded-lg bg-[#3b82f6]/10 border border-[#3b82f6]/20 text-[#3b82f6] flex items-center justify-center font-medium">
+                <User className="w-4 h-4" strokeWidth={1.75} />
               </div>
               <div>
-                <div className="text-[14px] font-bold text-pg-text-white">{user?.name || "Admin Operator"}</div>
-                <div className="text-[11px] text-pg-text-muted">{user?.email || "admin@payguard.ai"}</div>
+                <div className="text-[14px] font-semibold text-white">{user?.name || "Admin Operator"}</div>
+                <div className="text-[11px] text-neutral-400">{user?.email || "admin@payguard.ai"}</div>
               </div>
             </div>
 
             <div className="space-y-3 text-[13px]">
               <div>
-                <span className="text-pg-text-muted text-[11px] uppercase tracking-wider font-semibold block mb-1">
+                <span className="text-neutral-400 text-[11px] uppercase tracking-wider font-medium block mb-1">
                   Security Clearance
                 </span>
-                <span className="inline-block px-3 py-1 rounded-full bg-pg-accent-soft text-pg-accent border border-pg-accent/25 text-[11px] font-bold uppercase tracking-wider">
+                <span className="inline-block px-2.5 py-0.5 rounded-full bg-[#3b82f6]/10 text-[#3b82f6] border border-[#3b82f6]/25 text-[11px] font-medium uppercase tracking-wider">
                   {user?.role || "Risk Operations Director"}
                 </span>
               </div>
 
               <div>
-                <span className="text-pg-text-muted text-[11px] uppercase tracking-wider font-semibold block mb-1">
+                <span className="text-neutral-400 text-[11px] uppercase tracking-wider font-medium block mb-1">
                   Organization
                 </span>
-                <span className="font-medium text-pg-text-bright">PayGuard Global Sentinel</span>
+                <span className="font-medium text-white">PayGuard Global Sentinel</span>
               </div>
 
               <div>
-                <span className="text-pg-text-muted text-[11px] uppercase tracking-wider font-semibold block mb-1">
+                <span className="text-neutral-400 text-[11px] uppercase tracking-wider font-medium block mb-1">
                   Operational Node
                 </span>
-                <span className="font-mono text-[12px] text-pg-text-bright">ap-south-mumbai-01</span>
+                <span className="font-mono text-[12px] text-white">ap-south-mumbai-01</span>
               </div>
             </div>
           </GlassCard>
 
           {/* Engine Platform Specs */}
           <GlassCard className="flex flex-col gap-4">
-            <div className="flex items-center gap-2.5 pb-3 border-b border-pg-border/50">
-              <Cpu className="w-4 h-4 text-pg-accent" />
-              <h3 className="text-[13px] font-bold text-pg-text-bright">Engine Specifications</h3>
+            <div className="flex items-center gap-2 pb-3 border-b border-white/[0.06]">
+              <Cpu className="w-4 h-4 text-[#3b82f6]" strokeWidth={1.75} />
+              <h3 className="text-[13px] font-semibold text-white">Engine Specifications</h3>
             </div>
 
             <div className="space-y-3 text-[12px]">
-              <div className="flex justify-between py-1 border-b border-pg-border/30">
-                <span className="text-pg-text-muted">Detection Engine:</span>
-                <span className="font-semibold text-pg-text-bright">PayGuard Core v2.4</span>
+              <div className="flex justify-between py-1 border-b border-white/[0.04]">
+                <span className="text-neutral-400">Detection Engine:</span>
+                <span className="font-medium text-white">PayGuard Core v2.4</span>
               </div>
-              <div className="flex justify-between py-1 border-b border-pg-border/30">
-                <span className="text-pg-text-muted">Behavioral Profiler:</span>
-                <span className="font-semibold text-pg-text-bright">Continuous Real-Time</span>
+              <div className="flex justify-between py-1 border-b border-white/[0.04]">
+                <span className="text-neutral-400">Behavioral Profiler:</span>
+                <span className="font-medium text-white">Continuous Real-Time</span>
               </div>
-              <div className="flex justify-between py-1 border-b border-pg-border/30">
-                <span className="text-pg-text-muted">Explainability:</span>
-                <span className="font-semibold text-pg-text-bright">Deep Signal Attribution</span>
+              <div className="flex justify-between py-1 border-b border-white/[0.04]">
+                <span className="text-neutral-400">Explainability:</span>
+                <span className="font-medium text-white">Deep Signal Attribution</span>
               </div>
-              <div className="flex justify-between py-1 border-b border-pg-border/30">
-                <span className="text-pg-text-muted">Inference Target:</span>
-                <span className="font-mono text-pg-green font-semibold">&lt; 20ms</span>
+              <div className="flex justify-between py-1 border-b border-white/[0.04]">
+                <span className="text-neutral-400">Inference Target:</span>
+                <span className="font-mono text-emerald-400 font-medium">&lt; 20ms</span>
               </div>
             </div>
           </GlassCard>
@@ -122,28 +123,28 @@ export default function SettingsPage() {
         {/* Policy & Sensitivity Controls */}
         <div className="lg:col-span-8 flex flex-col gap-6">
           <GlassCard className="flex flex-col gap-6">
-            <div className="flex items-center gap-2.5 pb-4 border-b border-pg-border/50">
-              <Sliders className="w-5 h-5 text-pg-accent" />
+            <div className="flex items-center gap-2 pb-4 border-b border-white/[0.06]">
+              <Sliders className="w-4 h-4 text-[#3b82f6]" strokeWidth={1.75} />
               <div>
-                <h3 className="text-[15px] font-bold text-pg-text-white">Fraud Threshold Governance</h3>
-                <p className="text-[12px] text-pg-text-muted">
+                <h3 className="text-[15px] font-semibold text-white">Fraud Threshold Governance</h3>
+                <p className="text-[12px] text-neutral-400">
                   Fine-tune sensitivity between false positive avoidance and strict fraud blocking.
                 </p>
               </div>
             </div>
 
             {/* Slider */}
-            <div className="space-y-3 p-5 rounded-2xl bg-pg-surface-2 border border-pg-border/80">
+            <div className="space-y-3 p-4 rounded-xl bg-white/[0.02] border border-white/[0.06]">
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-[13px] font-semibold text-pg-text-bright">
+                  <span className="text-[13px] font-medium text-white">
                     Automatic Block Cutoff Score
                   </span>
-                  <p className="text-[11px] text-pg-text-muted mt-0.5">
+                  <p className="text-[11px] text-neutral-400 mt-0.5">
                     Transactions scoring above this composite index are immediately halted.
                   </p>
                 </div>
-                <div className="text-2xl font-bold font-mono text-pg-red">{threshold} / 100</div>
+                <div className="text-2xl font-semibold font-mono text-rose-400">{threshold} / 100</div>
               </div>
 
               <input
@@ -152,10 +153,10 @@ export default function SettingsPage() {
                 max="90"
                 value={threshold}
                 onChange={(e) => setThreshold(parseInt(e.target.value))}
-                className="w-full accent-indigo-600 cursor-pointer h-2 bg-pg-surface-3 rounded-lg"
+                className="w-full accent-[#3b82f6] cursor-pointer h-1.5 bg-white/[0.08] rounded-lg"
               />
 
-              <div className="flex justify-between text-[11px] text-pg-text-muted font-mono pt-1">
+              <div className="flex justify-between text-[11px] text-neutral-500 font-mono pt-1">
                 <span>30 (Strict / Low False Negatives)</span>
                 <span>65 (Balanced Enterprise)</span>
                 <span>90 (Permissive)</span>
@@ -163,48 +164,48 @@ export default function SettingsPage() {
             </div>
 
             {/* Toggles */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 rounded-xl bg-pg-surface-2/60 border border-pg-border/60">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/[0.06]">
                 <div>
-                  <div className="text-[13px] font-semibold text-pg-text-bright">
+                  <div className="text-[13px] font-medium text-white">
                     Real-time Telemetry Push
                   </div>
-                  <div className="text-[11px] text-pg-text-muted">
+                  <div className="text-[11px] text-neutral-400">
                     Notify operators immediately on high-risk outlier anomalies.
                   </div>
                 </div>
                 <button
                   onClick={() => setAlertsEnabled(!alertsEnabled)}
-                  className={`w-12 h-6 rounded-full transition-colors relative cursor-pointer ${
-                    alertsEnabled ? "bg-indigo-600" : "bg-pg-surface-3"
+                  className={`w-10 h-5 rounded-full transition-all duration-200 relative cursor-pointer ${
+                    alertsEnabled ? "bg-[#3b82f6]" : "bg-white/[0.1] border border-white/[0.12]"
                   }`}
                 >
                   <span
-                    className={`block w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${
-                      alertsEnabled ? "translate-x-7" : "translate-x-1"
+                    className={`block w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-transform ${
+                      alertsEnabled ? "translate-x-5" : "translate-x-0.5"
                     }`}
                   />
                 </button>
               </div>
 
-              <div className="flex items-center justify-between p-4 rounded-xl bg-pg-surface-2/60 border border-pg-border/60">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/[0.06]">
                 <div>
-                  <div className="text-[13px] font-semibold text-pg-text-bright">
+                  <div className="text-[13px] font-medium text-white">
                     Enforce Automated Decision Gateway
                   </div>
-                  <div className="text-[11px] text-pg-text-muted">
+                  <div className="text-[11px] text-neutral-400">
                     Automatically write decision outcomes directly to core banking ledger.
                   </div>
                 </div>
                 <button
                   onClick={() => setAutoBlockHighRisk(!autoBlockHighRisk)}
-                  className={`w-12 h-6 rounded-full transition-colors relative cursor-pointer ${
-                    autoBlockHighRisk ? "bg-indigo-600" : "bg-pg-surface-3"
+                  className={`w-10 h-5 rounded-full transition-all duration-200 relative cursor-pointer ${
+                    autoBlockHighRisk ? "bg-[#3b82f6]" : "bg-white/[0.1] border border-white/[0.12]"
                   }`}
                 >
                   <span
-                    className={`block w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${
-                      autoBlockHighRisk ? "translate-x-7" : "translate-x-1"
+                    className={`block w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-transform ${
+                      autoBlockHighRisk ? "translate-x-5" : "translate-x-0.5"
                     }`}
                   />
                 </button>

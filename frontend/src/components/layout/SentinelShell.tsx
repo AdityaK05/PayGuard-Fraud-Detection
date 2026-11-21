@@ -10,58 +10,58 @@ export default function SentinelShell() {
 
   return (
     <div className="relative min-h-screen bg-pg-base text-pg-text font-sans antialiased selection:bg-pg-accent-soft selection:text-pg-accent">
-      {/* ── Apple Liquid Glass Ambient Light Mesh ── */}
+      {/* ── Minimalist Atmospheric Backdrop ── */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
         <div
-          className="absolute -top-[15%] -right-[10%] w-[650px] h-[650px] rounded-full opacity-40 dark:opacity-30 blur-[120px]"
+          className="absolute -top-[20%] -right-[10%] w-[600px] h-[600px] rounded-full opacity-15 blur-[150px]"
           style={{
-            background: "radial-gradient(circle, rgba(99, 102, 241, 0.45) 0%, rgba(79, 70, 229, 0.15) 70%, transparent 100%)",
+            background: "radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 75%)",
           }}
         />
         <div
-          className="absolute -bottom-[20%] -left-[10%] w-[600px] h-[600px] rounded-full opacity-30 dark:opacity-20 blur-[130px]"
+          className="absolute -bottom-[20%] -left-[10%] w-[500px] h-[500px] rounded-full opacity-10 blur-[150px]"
           style={{
-            background: "radial-gradient(circle, rgba(16, 185, 129, 0.35) 0%, rgba(6, 182, 212, 0.12) 70%, transparent 100%)",
+            background: "radial-gradient(circle, rgba(37, 99, 235, 0.12) 0%, transparent 70%)",
           }}
         />
       </div>
 
-      {/* ── Top Apple Glass Header ── */}
-      <header className="fixed top-0 left-0 right-0 h-[60px] z-50 flex items-center justify-between px-6 border-b border-pg-border bg-pg-surface/75 backdrop-blur-2xl transition-colors duration-200">
+      {/* ── Top Minimalist Header ── */}
+      <header className="fixed top-0 left-0 right-0 h-[56px] z-50 flex items-center justify-between px-6 border-b border-white/[0.08] bg-pg-surface/80 backdrop-blur-2xl transition-colors duration-200">
         <div className="flex items-center gap-4">
           <PayGuardLogo size="md" />
 
-          <div className="h-4 w-px bg-pg-border hidden sm:block" />
+          <div className="h-3.5 w-px bg-white/[0.12] hidden sm:block" />
 
           {/* Clean Protection Indicator */}
-          <div className="hidden sm:flex items-center gap-2 text-[12px] font-medium text-pg-text-muted px-3 py-1 rounded-full bg-pg-surface-2/60 border border-pg-border/60">
-            <span className="w-2 h-2 rounded-full bg-pg-green shadow-[0_0_8px_rgba(16,185,129,0.6)] animate-pulse" />
-            <span className="text-pg-text-bright font-medium">Live Protection Active</span>
+          <div className="hidden sm:flex items-center gap-2 text-[11px] font-medium text-zinc-300 px-2.5 py-1 rounded-full bg-white/[0.04] border border-white/[0.08]">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#3b82f6]" />
+            <span className="text-zinc-200 font-medium tracking-wide">Live Monitoring</span>
           </div>
         </div>
 
         {/* Right Action Cluster */}
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2">
           {/* Theme Toggle */}
           <button
             onClick={toggleTheme}
-            className="w-9 h-9 rounded-xl border border-pg-border bg-pg-surface-2/60 hover:bg-pg-surface-2 text-pg-text-muted hover:text-pg-text-bright flex items-center justify-center transition-all duration-150 cursor-pointer"
+            className="w-8 h-8 rounded-lg border border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.06] text-zinc-400 hover:text-white flex items-center justify-center transition-all duration-150 cursor-pointer"
             title="Toggle theme"
           >
-            {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            {theme === "dark" ? <Sun className="w-3.5 h-3.5 text-[#3b82f6]" strokeWidth={1.75} /> : <Moon className="w-3.5 h-3.5 text-[#3b82f6]" strokeWidth={1.75} />}
           </button>
 
           {/* User Status Chip */}
           {user && (
-            <div className="flex items-center gap-2.5 pl-2 border-l border-pg-border">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 text-white font-semibold text-[12px] flex items-center justify-center shadow-sm">
+            <div className="flex items-center gap-2.5 pl-2 border-l border-white/[0.08]">
+              <div className="w-7 h-7 rounded-lg bg-[#2563eb] text-white font-medium text-[11px] flex items-center justify-center shadow-sm border border-white/20">
                 {user.name.charAt(0).toUpperCase()}
               </div>
               <div className="hidden lg:block text-left">
-                <div className="text-[12px] font-semibold text-pg-text-bright leading-none truncate max-w-[120px]">
+                <div className="text-[12px] font-medium text-white leading-none truncate max-w-[120px]">
                   {user.name}
                 </div>
-                <div className="text-[10px] text-pg-text-muted capitalize leading-none mt-1">
+                <div className="text-[10px] text-zinc-400 capitalize leading-none mt-1">
                   {user.role}
                 </div>
               </div>
@@ -71,7 +71,7 @@ export default function SentinelShell() {
       </header>
 
       {/* ── Main Viewport ── */}
-      <div className="relative z-10 min-h-screen pt-[60px]">
+      <div className="relative z-10 min-h-screen pt-[56px]">
         <Outlet />
       </div>
     </div>

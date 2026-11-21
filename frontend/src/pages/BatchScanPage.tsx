@@ -172,14 +172,16 @@ export default function BatchScanPage() {
 
   // ── CSV Parsing ─────────────────────────────────────────────
   function parseCSVContent(content: string): ParsedTransaction[] {
-    const lines = content.trim().split("\n")
+    const lines = content.trim().split(/\r?\n/)
     if (lines.length < 2) return []
 
-    const headers = lines[0].split(",").map((h) => h.trim().toLowerCase().replace(/["']/g, ""))
+    const headers = lines[0].split(",").map((h) => h.trim().toLowerCase().replace(/["'\r]/g, ""))
     const transactions: ParsedTransaction[] = []
 
     for (let i = 1; i < lines.length; i++) {
-      const values = lines[i].split(",").map((v) => v.trim().replace(/["']/g, ""))
+      const line = lines[i].trim()
+      if (!line) continue
+      const values = line.split(",").map((v) => v.trim().replace(/["'\r]/g, ""))
       if (values.length < 2) continue
 
       const row: Record<string, string> = {}
@@ -187,10 +189,14 @@ export default function BatchScanPage() {
         row[h] = values[idx] || ""
       })
 
-      const amount = parseFloat(
-        row["amount"] || row["txn_amount"] || row["transaction_amount"] || "0"
-      )
-      if (amount <= 0) continue
+      // Clean currency symbols (₹, $, €), commas, and whitespace
+      const rawAmt = row["amount"] || row["txn_amount"] || row["transaction_amount"] || row["amt"] || "0"
+      const cleanAmt = rawAmt.replace(/[^0-9.-]+/g, "")
+      const amount = parseFloat(cleanAmt)
+      if (isNaN(amount) || amount <= 0) continue
+
+      const lat = parseFloat(row["location_lat"] || row["lat"] || "")
+      const lng = parseFloat(row["location_lng"] || row["lng"] || "")
 
       transactions.push({
         payment_type: row["payment_type"] || row["type"] || DEFAULT_VALUES.payment_type,
@@ -198,8 +204,8 @@ export default function BatchScanPage() {
         merchant_category: row["merchant_category"] || row["category"] || DEFAULT_VALUES.merchant_category,
         merchant_id: row["merchant_id"] || row["merchant"] || DEFAULT_VALUES.merchant_id,
         location_city: row["location_city"] || row["city"] || DEFAULT_VALUES.location_city,
-        location_lat: parseFloat(row["location_lat"] || String(DEFAULT_VALUES.location_lat)),
-        location_lng: parseFloat(row["location_lng"] || String(DEFAULT_VALUES.location_lng)),
+        location_lat: isNaN(lat) ? DEFAULT_VALUES.location_lat : lat,
+        location_lng: isNaN(lng) ? DEFAULT_VALUES.location_lng : lng,
         device_type: row["device_type"] || row["device"] || DEFAULT_VALUES.device_type,
         ip_address: row["ip_address"] || row["ip"] || DEFAULT_VALUES.ip_address,
         os_type: row["os_type"] || row["os"] || DEFAULT_VALUES.os_type,
@@ -226,8 +232,20 @@ export default function BatchScanPage() {
         const text = await file.text()
         transactions = parseCSVContent(text)
       } else if (ext === "pdf") {
+        if (typeof (Promise as any).try !== "function") {
+          ;(Promise as any).try = function (fn: any, ...args: any[]) {
+            return new Promise((resolve) => resolve(fn(...args)))
+          }
+        }
         const pdfjsLib = await import("pdfjs-dist")
-        pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`
+        try {
+          pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+            "pdfjs-dist/build/pdf.worker.min.mjs",
+            import.meta.url
+          ).toString()
+        } catch {
+          // Fallback if URL resolution fails
+        }
         const arrayBuffer = await file.arrayBuffer()
         const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
         let fullText = ""
@@ -237,12 +255,13 @@ export default function BatchScanPage() {
           fullText += textContent.items.map((item: any) => item.str).join(" ") + "\n"
         }
         // Extract amounts with contextual inference
-        const amountPattern = /(?:₹|Rs\.?|INR)\s*([\d,]+\.?\d*)/gi
+        const amountPattern = /(?:₹|Rs\.?|INR|\$)?\s*([\d,]+\.?\d*)/gi
         let lineIdx = 0
         for (const line of fullText.split("\n")) {
           const matches = [...line.matchAll(amountPattern)]
           for (const m of matches) {
-            const amt = parseFloat(m[1].replace(/,/g, ""))
+            const cleanStr = (m[1] || "").replace(/,/g, "")
+            const amt = parseFloat(cleanStr)
             if (amt > 0 && amt < 10000000) {
               const lower = line.toLowerCase()
               const isHigh = amt >= 45000 || lower.includes("dubai") || lower.includes("crypto") || lower.includes("intl")
@@ -359,14 +378,36 @@ export default function BatchScanPage() {
   }
 
   const runBatchScan = async () => {
+    if (!parsedData || parsedData.length === 0) {
+      setError("No transaction records available to scan. Please load or drop a statement.")
+      return
+    }
     setBatchLoading(true)
     setError("")
     try {
       const { data } = await api.post("/predict/batch", { transactions: parsedData })
-      setSummary(data.summary)
-      setResults(data.results)
+      if (data && data.summary) {
+        setSummary(data.summary)
+        setResults(data.results || [])
+      } else {
+        setError("Invalid response format received from inference service.")
+      }
     } catch (err: any) {
-      setError(err.response?.data?.detail || "Batch scan execution failed. Check system logs.")
+      console.error("Batch scan error:", err)
+      const detail = err.response?.data?.detail
+      if (typeof detail === "string") {
+        setError(detail)
+      } else if (Array.isArray(detail)) {
+        setError(detail.map((d: any) => d.msg || d.message || JSON.stringify(d)).join("; "))
+      } else if (detail && typeof detail === "object") {
+        setError(JSON.stringify(detail))
+      } else if (err.code === "ECONNABORTED" || err.message?.includes("timeout")) {
+        setError("Batch inference timed out. Please try scanning fewer transactions.")
+      } else if (!err.response) {
+        setError("Unable to connect to PayGuard API server. Please check backend status.")
+      } else {
+        setError(err.message || "Batch scan execution failed. Check system logs.")
+      }
     } finally {
       setBatchLoading(false)
     }
@@ -378,42 +419,43 @@ export default function BatchScanPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[12px] font-semibold text-pg-accent tracking-wide uppercase">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#3b82f6]" />
+            <span className="text-[11px] font-semibold text-[#3b82f6] tracking-wider uppercase">
               Decision Laboratory
             </span>
-            <span className="text-pg-text-muted">·</span>
-            <span className="text-[12px] text-pg-text-muted">Instant Inference Engine</span>
+            <span className="text-neutral-600">·</span>
+            <span className="text-[11px] text-neutral-400 font-medium">Inference Engine</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-pg-text-white">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
             Scan & Simulate
           </h1>
-          <p className="text-[13px] text-pg-text-muted mt-1">
+          <p className="text-[13px] text-neutral-400 mt-1">
             Test single transactions interactively or upload bulk banking statements for neural risk scoring.
           </p>
         </div>
 
-        {/* iOS Segmented Pill Switcher */}
-        <div className="inline-flex p-1 rounded-2xl bg-pg-surface-2 border border-pg-border shadow-sm">
+        {/* Minimalist Pill Switcher */}
+        <div className="inline-flex p-1 rounded-xl bg-white/[0.03] border border-white/[0.08] backdrop-blur-md">
           <button
             onClick={() => setActiveTab("simulator")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-semibold transition-all duration-150 cursor-pointer ${
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-[12px] font-medium transition-all duration-150 cursor-pointer ${
               activeTab === "simulator"
-                ? "bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-sm"
-                : "text-pg-text-muted hover:text-pg-text-bright"
+                ? "bg-white/[0.1] text-white border border-white/[0.12] shadow-sm"
+                : "text-neutral-400 hover:text-white"
             }`}
           >
-            <Sliders className="w-4 h-4" />
+            <Sliders className="w-3.5 h-3.5 text-[#3b82f6]" strokeWidth={1.75} />
             <span>Interactive Simulator</span>
           </button>
           <button
             onClick={() => setActiveTab("batch")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-semibold transition-all duration-150 cursor-pointer ${
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-[12px] font-medium transition-all duration-150 cursor-pointer ${
               activeTab === "batch"
-                ? "bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-sm"
-                : "text-pg-text-muted hover:text-pg-text-bright"
+                ? "bg-white/[0.1] text-white border border-white/[0.12] shadow-sm"
+                : "text-neutral-400 hover:text-white"
             }`}
           >
-            <FileSpreadsheet className="w-4 h-4" />
+            <FileSpreadsheet className="w-3.5 h-3.5 text-[#3b82f6]" strokeWidth={1.75} />
             <span>Batch File Scanner</span>
           </button>
         </div>
@@ -662,9 +704,13 @@ export default function BatchScanPage() {
 
                       <div className="space-y-2.5 max-h-[220px] overflow-y-auto pr-1">
                         {Object.entries(simResult.shap_explanation)
-                          .sort((a: any, b: any) => Math.abs(b[1]) - Math.abs(a[1]))
+                          .map(([feat, imp]: [string, any]) => {
+                            const val = typeof imp === "number" ? imp : (imp && typeof imp === "object" && "shap_value" in imp ? (imp as any).shap_value : parseFloat(String(imp)) || 0)
+                            return { feat, val }
+                          })
+                          .sort((a, b) => Math.abs(b.val) - Math.abs(a.val))
                           .slice(0, 6)
-                          .map(([feat, imp]: [string, any], idx) => (
+                          .map(({ feat, val }, idx) => (
                             <div key={idx} className="flex flex-col gap-1 text-[11px]">
                               <div className="flex justify-between">
                                 <span className="text-pg-text-muted font-medium truncate max-w-[180px]">
@@ -672,26 +718,26 @@ export default function BatchScanPage() {
                                 </span>
                                 <span
                                   className={`font-semibold font-mono ${
-                                    imp > 0 ? "text-pg-red" : "text-pg-green"
+                                    val > 0 ? "text-pg-red" : "text-pg-green"
                                   }`}
                                 >
-                                  {imp > 0 ? `+${imp.toFixed(3)} (Threat)` : `${imp.toFixed(3)} (Safe)`}
+                                  {val > 0 ? `+${val.toFixed(3)} (Threat)` : `${val.toFixed(3)} (Safe)`}
                                 </span>
                               </div>
                               <div className="w-full h-1.5 rounded-full bg-pg-surface-3 overflow-hidden flex">
                                 <div className="w-1/2 flex justify-end">
-                                  {imp < 0 && (
+                                  {val < 0 && (
                                     <div
                                       className="h-full bg-pg-green rounded-full"
-                                      style={{ width: `${Math.min(100, Math.abs(imp) * 30)}%` }}
+                                      style={{ width: `${Math.min(100, Math.abs(val) * 30)}%` }}
                                     />
                                   )}
                                 </div>
                                 <div className="w-1/2 flex justify-start">
-                                  {imp > 0 && (
+                                  {val > 0 && (
                                     <div
                                       className="h-full bg-pg-red rounded-full"
-                                      style={{ width: `${Math.min(100, imp * 30)}%` }}
+                                      style={{ width: `${Math.min(100, val * 30)}%` }}
                                     />
                                   )}
                                 </div>
@@ -743,53 +789,53 @@ export default function BatchScanPage() {
               onDragLeave={() => setDragActive(false)}
               onClick={() => fileInputRef.current?.click()}
               className={`
-                w-full max-w-[700px] border-2 border-dashed rounded-3xl p-10
+                w-full max-w-[700px] border border-dashed rounded-xl p-8
                 flex flex-col items-center justify-center gap-3 cursor-pointer
                 transition-all duration-200
                 ${
                   dragActive
-                    ? "border-pg-accent bg-pg-accent-soft/30 shadow-lg scale-[1.01]"
-                    : "border-pg-border hover:border-pg-border-hover bg-pg-surface-2/40"
+                    ? "border-[#3b82f6] bg-[#3b82f6]/5"
+                    : "border-white/[0.14] hover:border-[#3b82f6]/40 bg-white/[0.015]"
                 }
               `}
             >
-              <div className="w-14 h-14 rounded-2xl bg-pg-accent-soft text-pg-accent flex items-center justify-center mb-1">
-                <Upload className="w-6 h-6" />
+              <div className="w-11 h-11 rounded-lg bg-[#3b82f6]/10 border border-[#3b82f6]/20 text-[#3b82f6] flex items-center justify-center mb-1">
+                <Upload className="w-5 h-5" strokeWidth={1.75} />
               </div>
-              <h3 className="text-[16px] font-semibold text-pg-text-white">
+              <h3 className="text-[15px] font-semibold text-white">
                 {fileName ? fileName : "Drop bank statement or transaction CSV here"}
               </h3>
-              <p className="text-[12px] text-pg-text-muted max-w-[420px]">
+              <p className="text-[12px] text-neutral-400 max-w-[420px]">
                 Accepts standard CSV statement exports and PDF bank account transaction records up to 500 rows.
               </p>
-              <span className="mt-2 ios-glass-button-primary px-4 py-2 text-[12px] flex items-center gap-1.5">
+              <span className="mt-2 ios-glass-button-primary px-3.5 py-1.5 text-[12px] flex items-center gap-1.5">
                 {parsing && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                 <span>{parsing ? "Parsing File..." : "Browse Document"}</span>
               </span>
             </div>
 
             {/* Quick Demo Batch Loaders */}
-            <div className="flex flex-wrap items-center justify-center gap-3 mt-6">
-              <span className="text-[11px] font-semibold text-pg-text-muted uppercase tracking-wider">
+            <div className="flex flex-wrap items-center justify-center gap-2.5 mt-6">
+              <span className="text-[11px] font-medium text-neutral-400 uppercase tracking-wider">
                 Or Try Sample Statements:
               </span>
               <button
                 onClick={() => loadSampleBatch(15, false)}
-                className="ios-glass-button px-3.5 py-1.5 text-[12px] text-pg-text-bright hover:border-pg-accent"
+                className="ios-glass-button px-3 py-1.5 text-[12px] text-white hover:border-[#3b82f6]/40"
               >
                 Sample Bank Statement (15 txs)
               </button>
               <button
                 onClick={() => loadSampleBatch(20, true)}
-                className="ios-glass-button px-3.5 py-1.5 text-[12px] text-pg-red hover:border-pg-red"
+                className="ios-glass-button px-3 py-1.5 text-[12px] text-rose-400 hover:border-rose-500/40"
               >
                 Simulated Attack Stream (20 txs)
               </button>
             </div>
 
             {error && (
-              <div className="mt-4 p-3 rounded-xl bg-pg-red-soft text-pg-red text-[12px] border border-pg-red/20 max-w-[600px]">
-                {error}
+              <div className="mt-4 p-3 rounded-xl bg-rose-500/10 text-rose-400 text-[12px] border border-rose-500/20 max-w-[600px] text-left">
+                {String(error)}
               </div>
             )}
           </GlassCard>
@@ -932,14 +978,17 @@ export default function BatchScanPage() {
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[11px]">
                                   {Object.entries(r.shap_explanation)
                                     .slice(0, 6)
-                                    .map(([f, v], idx) => (
-                                      <div key={idx} className="flex justify-between">
-                                        <span className="text-pg-text-muted">{f}:</span>
-                                        <span className={v > 0 ? "text-pg-red font-semibold" : "text-pg-green font-semibold"}>
-                                          {v > 0 ? `+${v.toFixed(3)}` : v.toFixed(3)}
-                                        </span>
-                                      </div>
-                                    ))}
+                                    .map(([f, v], idx) => {
+                                      const numVal = typeof v === "number" ? v : (v && typeof v === "object" && "shap_value" in v ? (v as any).shap_value : parseFloat(String(v)) || 0)
+                                      return (
+                                        <div key={idx} className="flex justify-between">
+                                          <span className="text-pg-text-muted">{f}:</span>
+                                          <span className={numVal > 0 ? "text-pg-red font-semibold" : "text-pg-green font-semibold"}>
+                                            {numVal > 0 ? `+${numVal.toFixed(3)}` : numVal.toFixed(3)}
+                                          </span>
+                                        </div>
+                                      )
+                                    })}
                                 </div>
                               </div>
                             </td>

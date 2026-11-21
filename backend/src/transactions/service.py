@@ -506,14 +506,13 @@ class TransactionService:
 
         for idx, tx_data in enumerate(transactions):
             try:
-                # Force SHAP on first 3 transactions and auto (suspicious/flagged) for the rest
-                shap_mode = True if idx < 3 else "auto"
+                # Fast batch inference: skip heavy per-row SHAP during bulk statement scanning
                 result = await self.create_and_predict(
                     user=user,
                     data=tx_data,
                     commit=False,
                     history_data=history_data,
-                    compute_shap=shap_mode,
+                    compute_shap=False,
                 )
                 results.append(result)
 

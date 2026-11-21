@@ -70,16 +70,17 @@ export default function HistoryPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[12px] font-semibold text-pg-accent tracking-wide uppercase">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#3b82f6]" />
+            <span className="text-[11px] font-semibold text-[#3b82f6] tracking-wider uppercase">
               Compliance & Forensics
             </span>
-            <span className="text-pg-text-muted">·</span>
-            <span className="text-[12px] text-pg-text-muted">Immutable History</span>
+            <span className="text-neutral-600">·</span>
+            <span className="text-[11px] text-neutral-400 font-medium">Audit Ledger</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-pg-text-white">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
             Audit Ledger
           </h1>
-          <p className="text-[13px] text-pg-text-muted mt-1">
+          <p className="text-[13px] text-neutral-400 mt-1">
             Complete historical transaction audit ledger with real-time risk scores and signal factors.
           </p>
         </div>
@@ -87,10 +88,10 @@ export default function HistoryPage() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => fetchHistory()}
-            className="ios-glass-button px-3.5 py-2 text-[12px] flex items-center gap-1.5"
+            className="ios-glass-button px-3.5 py-1.5 text-[12px] flex items-center gap-1.5"
             title="Refresh Ledger"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} strokeWidth={1.75} />
             <span>Refresh</span>
           </button>
         </div>
@@ -99,27 +100,27 @@ export default function HistoryPage() {
       {/* ── Table Card ── */}
       <GlassCard className="p-0 overflow-hidden flex flex-col">
         {/* Filter Bar */}
-        <div className="p-4 sm:p-5 border-b border-pg-border flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        <div className="p-4 sm:p-5 border-b border-white/[0.06] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-pg-text-muted" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" strokeWidth={1.75} />
             <input
               type="text"
               placeholder="Search by Transaction ID, Merchant, City, or Bank..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full ios-glass-input pl-10 pr-4 py-2 text-[13px] text-pg-text-bright"
+              className="w-full ios-glass-input pl-10 pr-4 py-2 text-[13px] text-white placeholder-neutral-500"
             />
           </div>
 
-          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-pg-surface-2 border border-pg-border text-[12px]">
+          <div className="flex items-center gap-1 p-1 rounded-xl bg-white/[0.03] border border-white/[0.08] text-[12px]">
             {(["all", "approved", "review", "blocked"] as const).map((st) => (
               <button
                 key={st}
                 onClick={() => setFilterStatus(st)}
-                className={`px-3 py-1 rounded-lg font-medium capitalize transition-all duration-150 cursor-pointer ${
+                className={`px-3 py-1 rounded-lg font-medium capitalize transition-all duration-150 cursor-pointer text-[11px] ${
                   filterStatus === st
-                    ? "bg-pg-surface-3 text-pg-text-white shadow-sm font-semibold"
-                    : "text-pg-text-muted hover:text-pg-text-bright"
+                    ? "bg-white/[0.1] text-white border border-white/[0.12] shadow-sm"
+                    : "text-neutral-400 hover:text-white"
                 }`}
               >
                 {st}

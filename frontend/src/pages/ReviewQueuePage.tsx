@@ -64,23 +64,24 @@ export default function ReviewQueuePage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[12px] font-semibold text-pg-amber tracking-wide uppercase">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+            <span className="text-[11px] font-semibold text-amber-400 tracking-wider uppercase">
               Human-in-the-Loop
             </span>
-            <span className="text-pg-text-muted">·</span>
-            <span className="text-[12px] text-pg-text-muted">Triage Queue</span>
+            <span className="text-neutral-600">·</span>
+            <span className="text-[11px] text-neutral-400 font-medium">Triage Queue</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-pg-text-white">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
             Incident Review Queue
           </h1>
-          <p className="text-[13px] text-pg-text-muted mt-1">
+          <p className="text-[13px] text-neutral-400 mt-1">
             Suspicious anomaly transactions requiring operational review or automated policy override.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-[12px] font-semibold text-pg-text-bright px-3 py-1.5 rounded-xl bg-pg-surface-2 border border-pg-border">
-            Pending Review: <strong className="text-pg-accent">{queue.length}</strong>
+          <span className="text-[12px] font-medium text-neutral-300 px-3.5 py-1.5 rounded-xl bg-white/[0.03] border border-white/[0.08]">
+            Pending Review: <strong className="text-[#3b82f6] font-semibold ml-1">{queue.length}</strong>
           </span>
         </div>
       </div>
@@ -88,17 +89,17 @@ export default function ReviewQueuePage() {
       {/* ── Grid ── */}
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Skeleton className="h-[280px]" />
-          <Skeleton className="h-[280px]" />
-          <Skeleton className="h-[280px]" />
+          <Skeleton className="h-[280px] rounded-xl" />
+          <Skeleton className="h-[280px] rounded-xl" />
+          <Skeleton className="h-[280px] rounded-xl" />
         </div>
       ) : queue.length === 0 ? (
         <GlassCard className="py-20 flex flex-col items-center justify-center text-center">
-          <div className="w-14 h-14 rounded-full bg-pg-green-soft text-pg-green flex items-center justify-center mb-3">
-            <ShieldCheck className="w-7 h-7" />
+          <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mb-3">
+            <ShieldCheck className="w-6 h-6" strokeWidth={1.75} />
           </div>
-          <h3 className="text-[16px] font-bold text-pg-text-bright">Queue Cleared & Clean</h3>
-          <p className="text-[13px] text-pg-text-muted max-w-sm mt-1">
+          <h3 className="text-[15px] font-semibold text-white">Queue Cleared & Clean</h3>
+          <p className="text-[12px] text-neutral-400 max-w-sm mt-1">
             No transactions currently violate risk thresholds or require manual verification.
           </p>
         </GlassCard>
@@ -111,8 +112,8 @@ export default function ReviewQueuePage() {
               className="flex flex-col justify-between transition-all duration-200"
             >
               <div>
-                <div className="flex items-center justify-between pb-3 border-b border-pg-border/50 mb-4">
-                  <span className="font-mono text-[12px] font-semibold text-pg-accent">
+                <div className="flex items-center justify-between pb-3 border-b border-white/[0.06] mb-4">
+                  <span className="font-mono text-[12px] font-medium text-[#3b82f6]">
                     {tx.transaction_id.slice(0, 14)}...
                   </span>
                   <RiskBadge
@@ -123,47 +124,47 @@ export default function ReviewQueuePage() {
                 </div>
 
                 <div className="mb-4">
-                  <div className="text-2xl font-bold text-pg-text-white tracking-tight">
+                  <div className="text-2xl font-semibold text-white tracking-tight">
                     ₹{tx.amount.toLocaleString()}
                   </div>
-                  <div className="text-[12px] text-pg-text-muted capitalize mt-0.5">
+                  <div className="text-[12px] text-neutral-400 capitalize mt-0.5">
                     {tx.merchant_category} · {tx.location_city || "Unknown Location"}
                   </div>
                 </div>
 
-                <div className="space-y-2 text-[12px] py-3 border-t border-pg-border/40">
+                <div className="space-y-2 text-[12px] py-3 border-t border-white/[0.06]">
                   <div className="flex justify-between">
-                    <span className="text-pg-text-muted">Merchant Ref:</span>
-                    <span className="font-medium text-pg-text-bright font-mono">{tx.merchant_id}</span>
+                    <span className="text-neutral-400">Merchant Ref:</span>
+                    <span className="font-medium text-white font-mono">{tx.merchant_id}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-pg-text-muted">Bank Network:</span>
-                    <span className="font-medium text-pg-text-bright">{tx.bank_name || "HDFC Bank"}</span>
+                    <span className="text-neutral-400">Bank Network:</span>
+                    <span className="font-medium text-white">{tx.bank_name || "HDFC Bank"}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-pg-text-muted">Timestamp:</span>
-                    <span className="text-pg-text-muted font-mono text-[11px]">
+                    <span className="text-neutral-400">Timestamp:</span>
+                    <span className="text-neutral-500 font-mono text-[11px]">
                       {new Date(tx.timestamp).toLocaleTimeString()}
                     </span>
                   </div>
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-pg-border/50 flex gap-3 mt-4">
+              <div className="pt-4 border-t border-white/[0.06] flex gap-3 mt-4">
                 <button
                   onClick={() => handleDecision(tx.id, "approved")}
                   disabled={actionInProgress === tx.id}
-                  className="flex-1 py-2.5 rounded-xl border border-pg-green/30 bg-pg-green-soft text-pg-green font-semibold text-[13px] hover:bg-pg-green hover:text-white transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer"
+                  className="flex-1 py-2 rounded-lg border border-emerald-500/20 bg-emerald-500/10 text-emerald-400 font-medium text-[12px] hover:bg-emerald-500/20 hover:border-emerald-500/30 transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer"
                 >
-                  <Check className="w-4 h-4" />
+                  <Check className="w-3.5 h-3.5" strokeWidth={1.75} />
                   <span>Approve</span>
                 </button>
                 <button
                   onClick={() => handleDecision(tx.id, "blocked")}
                   disabled={actionInProgress === tx.id}
-                  className="flex-1 py-2.5 rounded-xl border border-pg-red/30 bg-pg-red-soft text-pg-red font-semibold text-[13px] hover:bg-pg-red hover:text-white transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer"
+                  className="flex-1 py-2 rounded-lg border border-rose-500/20 bg-rose-500/10 text-rose-400 font-medium text-[12px] hover:bg-rose-500/20 hover:border-rose-500/30 transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-3.5 h-3.5" strokeWidth={1.75} />
                   <span>Block Fraud</span>
                 </button>
               </div>

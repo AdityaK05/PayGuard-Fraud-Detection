@@ -42,9 +42,9 @@ export default function SentinelSidebar() {
   ]
 
   return (
-    <aside className="fixed left-4 top-[76px] bottom-4 w-[240px] z-40 hidden md:flex flex-col rounded-3xl border border-pg-border bg-pg-surface/75 backdrop-blur-2xl shadow-[var(--glass-shadow)] p-3 transition-colors duration-200">
+    <aside className="fixed left-4 top-[72px] bottom-4 w-[230px] z-40 hidden md:flex flex-col rounded-2xl border border-white/[0.08] bg-pg-surface/80 backdrop-blur-2xl shadow-[var(--glass-shadow)] p-3 transition-colors duration-200">
       {/* Navigation Group */}
-      <div className="text-[11px] font-semibold text-pg-text-muted uppercase tracking-wider px-3 pt-2 pb-1.5">
+      <div className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest px-3 pt-2 pb-2">
         Platform
       </div>
 
@@ -59,36 +59,40 @@ export default function SentinelSidebar() {
               key={link.name}
               to={link.path}
               className={`
-                group relative flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-[13px] font-medium
+                group relative flex items-center justify-between px-3 py-2 rounded-xl text-[13px]
                 transition-all duration-150 cursor-pointer select-none
                 ${
                   isActive
-                    ? "bg-gradient-to-r from-indigo-600 to-indigo-500 text-white font-semibold shadow-[0_4px_14px_rgba(79,70,229,0.35)]"
-                    : "text-pg-text hover:text-pg-text-white hover:bg-pg-surface-2/80"
+                    ? "bg-white/[0.06] text-white font-medium border border-white/[0.12] shadow-sm"
+                    : "text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.03]"
                 }
               `}
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2.5">
                 <Icon
-                  className={`w-[18px] h-[18px] transition-transform duration-150 ${
-                    isActive ? "text-white scale-105" : "text-pg-text-muted group-hover:text-pg-accent"
+                  className={`w-4 h-4 transition-colors duration-150 ${
+                    isActive ? "text-[#3b82f6]" : "text-zinc-400 group-hover:text-zinc-200"
                   }`}
+                  strokeWidth={1.75}
                 />
                 <span>{link.name}</span>
               </div>
+              {isActive && (
+                <span className="w-1.5 h-1.5 rounded-full bg-[#3b82f6]" />
+              )}
             </Link>
           )
         })}
       </nav>
 
       {/* User & Sign Out */}
-      <div className="pt-2 border-t border-pg-border/60 flex flex-col gap-1">
+      <div className="pt-2 border-t border-white/[0.08] flex flex-col gap-1">
         {user && (
-          <div className="px-3 py-1.5 text-left">
-            <div className="text-[12px] font-semibold text-pg-text-bright truncate">
+          <div className="px-3 py-1 text-left">
+            <div className="text-[12px] font-medium text-white truncate">
               {user.name}
             </div>
-            <div className="text-[10px] text-pg-text-muted truncate">
+            <div className="text-[10px] text-zinc-400 truncate">
               {user.email}
             </div>
           </div>
@@ -96,9 +100,9 @@ export default function SentinelSidebar() {
 
         <button
           onClick={logout}
-          className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[12px] font-medium text-pg-red/80 hover:text-pg-red hover:bg-pg-red-soft transition-all duration-150 cursor-pointer w-full text-left"
+          className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12px] font-medium text-zinc-400 hover:text-rose-400 hover:bg-rose-500/[0.08] transition-all duration-150 cursor-pointer w-full text-left"
         >
-          <LogOut className="w-4 h-4" />
+          <LogOut className="w-3.5 h-3.5" strokeWidth={1.75} />
           <span>Sign Out</span>
         </button>
       </div>

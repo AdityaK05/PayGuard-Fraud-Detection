@@ -14,25 +14,25 @@ export function GlassCard({
   glow = false,
   ...props
 }: GlassCardProps) {
-  let borderStyle = "border-pg-border"
+  let borderStyle = "border-white/[0.08]"
   let bgStyle = "bg-pg-surface"
 
   if (variant === "danger") {
-    borderStyle = "border-pg-red/30 shadow-[0_8px_30px_rgba(244,63,94,0.08)]"
+    borderStyle = "border-rose-500/30 shadow-[0_8px_24px_rgba(255,51,102,0.10)]"
   } else if (variant === "success") {
-    borderStyle = "border-pg-green/30 shadow-[0_8px_30px_rgba(16,185,129,0.08)]"
+    borderStyle = "border-emerald-500/30 shadow-[0_8px_24px_rgba(0,240,170,0.10)]"
   } else if (variant === "subtle") {
     bgStyle = "bg-pg-surface-2/60"
   }
 
-  const hoverClass = variant === "hover" ? "hover:border-pg-border-hover hover:-translate-y-0.5" : ""
+  const hoverClass = variant === "hover" ? "hover:border-white/20 hover:-translate-y-0.5" : ""
 
   return (
     <div
       className={`
-        relative rounded-2xl border ${borderStyle} ${bgStyle}
-        backdrop-blur-2xl p-6 transition-all duration-200
-        ${glow ? "shadow-[0_12px_40px_rgba(99,102,241,0.12)]" : ""}
+        relative rounded-xl border ${borderStyle} ${bgStyle}
+        backdrop-blur-xl p-5 sm:p-6 transition-all duration-200
+        ${glow ? "shadow-[0_0_24px_rgba(0,210,255,0.18)] border-sky-400/30" : ""}
         ${hoverClass}
         ${className}
       `}

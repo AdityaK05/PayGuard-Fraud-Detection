@@ -13,17 +13,17 @@ from pydantic import BaseModel, Field
 
 class TransactionCreate(BaseModel):
     """Payload for submitting a new transaction for fraud analysis."""
-    payment_type: str = Field(..., examples=["p2p", "p2m", "bill_payment"])
+    payment_type: str = Field(default="p2m", examples=["p2p", "p2m", "bill_payment"])
     amount: float = Field(..., gt=0, le=10000000, examples=[2500.0])
-    merchant_category: str = Field(..., examples=["electronics", "grocery"])
-    merchant_id: str = Field(..., examples=["MER1234"])
-    location_city: str = Field(..., examples=["Mumbai"])
-    location_lat: float = Field(..., examples=[19.076])
-    location_lng: float = Field(..., examples=[72.877])
-    device_type: str = Field(..., examples=["android", "ios"])
-    ip_address: str = Field(..., examples=["103.1.2.3"])
-    os_type: str = Field(..., examples=["android_14"])
-    bank_name: str = Field(..., examples=["HDFC"])
+    merchant_category: str = Field(default="general", examples=["electronics", "grocery"])
+    merchant_id: str = Field(default="MERCH_GENERIC", examples=["MER1234"])
+    location_city: str = Field(default="Mumbai", examples=["Mumbai"])
+    location_lat: float = Field(default=19.076, examples=[19.076])
+    location_lng: float = Field(default=72.877, examples=[72.877])
+    device_type: str = Field(default="android", examples=["android", "ios"])
+    ip_address: str = Field(default="192.168.1.10", examples=["103.1.2.3"])
+    os_type: str = Field(default="android_14", examples=["android_14"])
+    bank_name: str = Field(default="HDFC", examples=["HDFC"])
     timestamp: Optional[str] = None
 
 

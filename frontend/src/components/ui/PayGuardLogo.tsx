@@ -11,74 +11,65 @@ export function PayGuardLogo({
   size = "md",
 }: PayGuardLogoProps) {
   const iconSizes = {
-    sm: "w-7 h-7",
-    md: "w-8 h-8",
-    lg: "w-10 h-10",
+    sm: "w-6 h-6",
+    md: "w-7 h-7",
+    lg: "w-9 h-9",
   }
 
   const textSizes = {
-    sm: "text-[14px]",
-    md: "text-[16px]",
-    lg: "text-[20px]",
+    sm: "text-[13px]",
+    md: "text-[15px]",
+    lg: "text-[18px]",
   }
 
   return (
     <div className={`flex items-center gap-2.5 select-none ${className}`}>
-      {/* Bespoke Modern Geometric Fintech Shield Mark */}
+      {/* Minimalist Professional Security Monogram */}
       <div className={`relative ${iconSizes[size]} shrink-0 flex items-center justify-center`}>
         <svg
-          viewBox="0 0 36 36"
+          viewBox="0 0 32 32"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
-          className="w-full h-full drop-shadow-[0_2px_10px_rgba(99,102,241,0.35)]"
+          className="w-full h-full"
         >
-          {/* Outer geometric shield facet */}
+          {/* Subtle background shield plate */}
           <path
-            d="M18 3L6 8.5V17C6 24.5 11.2 31.4 18 33C24.8 31.4 30 24.5 30 17V8.5L18 3Z"
-            fill="url(#pgGradOuter)"
+            d="M16 2.5L5 7V15.5C5 22.5 9.7 28.5 16 30C22.3 28.5 27 22.5 27 15.5V7L16 2.5Z"
+            fill="#05070a"
+            stroke="rgba(255, 255, 255, 0.15)"
+            strokeWidth="1.2"
           />
-          {/* Inner faceted reflective glass layer */}
+          {/* Left shield facet - Obsidian Glass */}
           <path
-            d="M18 6.2L9.2 10.2V17C9.2 22.8 13 28.2 18 29.8C23 28.2 26.8 22.8 26.8 17V10.2L18 6.2Z"
-            fill="url(#pgGradInner)"
+            d="M16 4.2L6.8 8V15.5C6.8 21.6 10.8 26.8 16 28.2V4.2Z"
+            fill="rgba(255, 255, 255, 0.03)"
           />
-          {/* Dynamic Payment Lock / Verified Notch */}
+          {/* Right shield facet - Matte Blue Gradient */}
           <path
-            d="M15.5 17.5L17.5 19.5L21.5 14.5"
-            stroke="#ffffff"
-            strokeWidth="2.4"
+            d="M16 4.2L25.2 8V15.5C25.2 21.6 21.2 26.8 16 28.2V4.2Z"
+            fill="url(#minimalBlueGrad)"
+            opacity="0.9"
+          />
+          {/* Central Precision Security Node */}
+          <circle cx="16" cy="15.5" r="2.5" fill="#ffffff" />
+          <path
+            d="M16 11V13M16 18V20M11.5 15.5H13.5M18.5 15.5H20.5"
+            stroke="#3b82f6"
+            strokeWidth="1.4"
             strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          {/* Subtle specular top highlight */}
-          <path
-            d="M18 6.2L9.2 10.2V13.5L18 9.5L26.8 13.5V10.2L18 6.2Z"
-            fill="rgba(255, 255, 255, 0.35)"
           />
 
           <defs>
             <linearGradient
-              id="pgGradOuter"
-              x1="6"
-              y1="3"
-              x2="30"
-              y2="33"
+              id="minimalBlueGrad"
+              x1="16"
+              y1="4"
+              x2="26"
+              y2="28"
               gradientUnits="userSpaceOnUse"
             >
-              <stop stopColor="#6366F1" />
-              <stop offset="0.5" stopColor="#4F46E5" />
-              <stop offset="1" stopColor="#3730A3" />
-            </linearGradient>
-            <linearGradient
-              id="pgGradInner"
-              x1="9.2"
-              y1="6.2"
-              x2="26.8"
-              y2="29.8"
-              gradientUnits="userSpaceOnUse"
-            >
-              <stop stopColor="#1E1B4B" stopOpacity="0.85" />
-              <stop offset="1" stopColor="#0F172A" stopOpacity="0.95" />
+              <stop stopColor="#3b82f6" stopOpacity="0.9" />
+              <stop offset="1" stopColor="#1d4ed8" stopOpacity="0.5" />
             </linearGradient>
           </defs>
         </svg>
@@ -86,11 +77,11 @@ export function PayGuardLogo({
 
       {showText && (
         <div className="flex flex-col leading-none">
-          <div className={`font-bold tracking-tight text-pg-text-white font-sans ${textSizes[size]}`}>
-            Pay<span className="text-pg-accent">Guard</span>
+          <div className={`font-semibold tracking-tight text-white font-sans ${textSizes[size]}`}>
+            Pay<span className="text-[#3b82f6] font-bold">Guard</span>
           </div>
-          <span className="text-[10px] text-pg-text-muted font-medium tracking-wide mt-0.5">
-            Enterprise Security
+          <span className="text-[9px] text-zinc-400 font-medium tracking-wider uppercase mt-0.5">
+            Security Core
           </span>
         </div>
       )}
